@@ -1517,5 +1517,6 @@
         window.addEventListener("keydown", (e) => { if(e.key === "Enter"){ handleAction(); } });
         document.body.addEventListener("click", (e) => { const tag = e.target.tagName; if(tag === "BUTTON" || tag === "INPUT" || e.target.closest(".diamond") || e.target.closest(".choice-diamond") || e.target.closest(".bonus-card") || e.target.closest(".home-footer-menu") || e.target.closest(".gacha-container") || e.target.closest(".popup-card")){ return; } handleAction(); });
     </script>
+    <script type="module" src="home.js"></script>
 </body>
 </html>
