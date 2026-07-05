@@ -17,18 +17,34 @@ const exp = document.getElementById("exp");
 const coins = document.getElementById("coins");
 const monsterImage = document.getElementById("monsterImage");
 
-loadPlayer();
-
-async function loadPlayer() {
-
-    const user = auth.currentUser;
+onAuthStateChanged(auth, async (user) => {
 
     if (!user) {
-
-        window.location.href = "index.html";
         return;
-
     }
+
+    const ref = doc(db, "users", user.uid);
+
+    const snap = await getDoc(ref);
+
+    if (!snap.exists()) {
+        console.log("ユーザーデータがありません");
+        return;
+    }
+
+    const data = snap.data();
+
+    playerName.textContent = data.accountName;
+    level.textContent = "Lv." + data.level;
+    exp.textContent = data.exp + " XP";
+    coins.textContent = data.coins + " Coins";
+
+    updateMonster(
+        data.monster || "leaf",
+        data.monsterLevel || 1
+    );
+
+});
 
     const ref = doc(db, "users", user.uid);
 
