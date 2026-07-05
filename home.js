@@ -59,46 +59,6 @@ onAuthStateChanged(auth, async (user) => {
     }
 
 });
-    const data = snap.data();
-
-    playerName.textContent = data.accountName;
-    level.textContent = "Lv." + data.level;
-    exp.textContent = data.exp + " XP";
-    coins.textContent = data.coins + " Coins";
-
-    updateMonster(
-        data.monster || "leaf",
-        data.monsterLevel || 1
-    );
-
-});
-
-    const ref = doc(db, "users", user.uid);
-
-    const snap = await getDoc(ref);
-
-    if (!snap.exists()) {
-
-        console.log("ユーザーデータがありません");
-        return;
-
-    }
-
-    const data = snap.data();
-
-    // プレイヤー情報
-    playerName.textContent = data.accountName;
-    level.textContent = "Lv." + data.level;
-    exp.textContent = data.exp + " XP";
-    coins.textContent = data.coins + " Coins";
-
-    // モンスター表示
-    updateMonster(
-        data.monster || "leaf",
-        data.monsterLevel || 1
-    );
-
-}
 
 
 // モンスター画像変更
