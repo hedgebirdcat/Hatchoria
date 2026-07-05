@@ -22,19 +22,43 @@ const monsterImage = document.getElementById("monsterImage");
 
 onAuthStateChanged(auth, async (user) => {
 
+    // Firebaseがログイン状態を確認中は待つ
     if (!user) {
+        console.log("ログイン状態を確認中、または未ログインです。");
         return;
     }
 
-    const ref = doc(db, "users", user.uid);
+    try {
 
-    const snap = await getDoc(ref);
+        const ref = doc(db, "users", user.uid);
+        const snap = await getDoc(ref);
 
-    if (!snap.exists()) {
-        console.log("ユーザーデータがありません");
-        return;
+        if (!snap.exists()) {
+            console.log("ユーザーデータがありません");
+            return;
+        }
+
+        const data = snap.data();
+
+        // プレイヤー情報
+        if (playerName) playerName.textContent = data.accountName || "";
+        if (level) level.textContent = "Lv." + (data.level || 1);
+        if (exp) exp.textContent = (data.exp || 0) + " XP";
+        if (coins) coins.textContent = (data.coins || 0) + " Coins";
+
+        // モンスター表示
+        updateMonster(
+            data.monster || "leaf",
+            data.monsterLevel || 1
+        );
+
+    } catch (error) {
+
+        console.error("読み込みエラー:", error);
+
     }
 
+});
     const data = snap.data();
 
     playerName.textContent = data.accountName;
