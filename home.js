@@ -10,6 +10,9 @@ import {
     doc,
     getDoc
 } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
+import {
+    onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
 
 const playerName = document.getElementById("playerName");
 const level = document.getElementById("level");
