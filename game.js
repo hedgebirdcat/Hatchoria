@@ -5,6 +5,12 @@
 // クイズゲーム本体
 // ======================================
 
+import { auth } from "./firebase.js";
+
+import {
+    onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
+
 import {
     loadSaveData,
     saveGame,
@@ -79,7 +85,11 @@ function cacheElements() {
 // 初期化
 // ======================================
 
-window.addEventListener("DOMContentLoaded", async () => {
+// onAuthStateChanged は複数回呼ばれることがあるため、
+// ゲームの初期化・イベント登録は最初の1回だけ行う
+let hasInitialized = false;
+
+window.addEventListener("DOMContentLoaded", () => {
 
     console.log("game.js 起動");
 
@@ -93,39 +103,63 @@ window.addEventListener("DOMContentLoaded", async () => {
 
     }
 
-    // Firebaseからロード
-    player = await loadSaveData();
+    // Firebaseの認証状態が確定するまで待つ
+    // (ページ遷移直後は auth.currentUser がまだ null のことがあるため、
+    //  onAuthStateChanged を使わずに直接読みに行くとログイン画面に
+    //  戻されてしまう)
+    onAuthStateChanged(auth, async (user) => {
 
-    if (!player) {
+        if (!user) {
 
-        console.log("プレイヤーデータ取得失敗。ログイン画面に戻ります。");
-        window.location.href = "index.html";
-        return;
+            console.log("未ログインです。ログイン画面に戻ります。");
 
-    }
+            if (hasInitialized) {
+                // ゲーム中にログアウトされた場合のみ遷移
+                window.location.href = "index.html";
+            }
 
-    // 必要XP(goal)が未設定の場合は初期値を補う
-    if (!player.goal) {
-        player.goal = DEFAULT_GOAL;
-    }
+            return;
 
-    console.log("プレイヤーデータ取得成功");
-
-    initializeGame();
-
-    // イベント登録
-    els.checkBtn.addEventListener("click", handleCheck);
-    els.nextBtn.addEventListener("click", handleNext);
-
-    window.addEventListener("keydown", (e) => {
-
-        if (e.key !== "Enter") return;
-
-        if (isWaiting) {
-            handleNext();
-        } else {
-            handleCheck();
         }
+
+        if (hasInitialized) return;
+        hasInitialized = true;
+
+        // Firebaseからロード
+        player = await loadSaveData();
+
+        if (!player) {
+
+            console.log("プレイヤーデータ取得失敗。ログイン画面に戻ります。");
+            window.location.href = "index.html";
+            return;
+
+        }
+
+        // 必要XP(goal)が未設定の場合は初期値を補う
+        if (!player.goal) {
+            player.goal = DEFAULT_GOAL;
+        }
+
+        console.log("プレイヤーデータ取得成功");
+
+        initializeGame();
+
+        // イベント登録
+        els.checkBtn.addEventListener("click", handleCheck);
+        els.nextBtn.addEventListener("click", handleNext);
+
+        window.addEventListener("keydown", (e) => {
+
+            if (e.key !== "Enter") return;
+
+            if (isWaiting) {
+                handleNext();
+            } else {
+                handleCheck();
+            }
+
+        });
 
     });
 
