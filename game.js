@@ -165,6 +165,16 @@ window.addEventListener("DOMContentLoaded", () => {
 
 });
 
+// screenNav.js から「ゲーム画面に入った」通知を受けたら
+// 新しいラウンドを開始する
+window.addEventListener("hatchoria:enterGame", () => {
+
+    if (!hasInitialized || !player) return;
+
+    initializeGame();
+
+});
+
 // ======================================
 // 初期設定
 // ======================================
