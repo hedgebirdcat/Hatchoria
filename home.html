@@ -730,6 +730,19 @@
         }
         
         #combo-display { position: fixed; top: 130px; right: 45px; font-size: 38px; font-weight: 900; color: #ff5722; z-index: 6000; text-shadow: 0 0 8px white; }
+        #question-counter {
+            position: fixed;
+            top: 20px;
+            right: 45px;
+            font-size: 26px;
+            font-weight: 900;
+            color: #333;
+            z-index: 6000;
+            background: rgba(255,255,255,0.85);
+            padding: 6px 20px;
+            border-radius: 999px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+        }
         .main-stage { position: absolute; top: 46%; left: 50%; transform: translate(-50%, -50%); text-align: center; width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; }
         .game-float-char-anim { animation: gameFloatEgg 4s ease-in-out infinite; }
         @keyframes gameFloatEgg { 0% { transform: translateY(0px); } 50% { transform: translateY(-20px); } 100% { transform: translateY(0px); } }
@@ -796,6 +809,52 @@
         
         #levelup-overlay { position: fixed; inset: 0; overflow: hidden; pointer-events: none; display: none; z-index: 5000; }
         #levelup-overlay::before { content: ""; position: absolute; width: 100%; height: 200%; left: 0; bottom: -100%; background: linear-gradient(to top, rgba(33,150,243,0.4), rgba(103,58,183,0.3), rgba(255,255,255,0)); animation: levelGlow 2s ease-out forwards; }
+
+        #gameover-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 9000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            background: black;
+            opacity: 0;
+            transition: opacity 2s ease-in;
+        }
+        #gameover-overlay.show {
+            display: flex;
+            opacity: 1;
+        }
+        #gameover-text {
+            color: white;
+            font-size: 56px;
+            font-weight: 900;
+            letter-spacing: 4px;
+            opacity: 0;
+            transition: opacity 0.6s ease-in;
+        }
+        #gameover-overlay.show-text #gameover-text {
+            opacity: 1;
+        }
+        #gameover-home-btn {
+            margin-top: 30px;
+            padding: 16px 60px;
+            font-size: 22px;
+            font-weight: 900;
+            color: #333;
+            background: white;
+            border: none;
+            border-radius: 999px;
+            box-shadow: 0 6px 16px rgba(0,0,0,0.3);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.6s ease-in;
+        }
+        #gameover-overlay.show-text #gameover-home-btn {
+            opacity: 1;
+            pointer-events: auto;
+        }
         @keyframes levelGlow { 0% { transform: translateY(100%); opacity: 0; } 100% { transform: translateY(-20%); opacity: 1; } }
         .sparkle { position: absolute; width: 12px; height: 12px; border-radius: 50%; background: white; box-shadow: 0 0 10px white; animation: sparkleMove 2s linear forwards; }
         @keyframes sparkleMove { 0% { transform: translateY(0) scale(0.5); opacity: 0; } 20% { opacity: 1; } 100% { transform: translateY(-120vh) scale(1.5); opacity: 0; } }
@@ -943,6 +1002,7 @@
     <div id="game-screen" class="screen">
         <button id="back-btn" class="nav-btn">← HOME</button>
         <div id="life-container">❤️❤️❤️</div>
+        <div id="question-counter">10/10</div>
         <div id="combo-display">🔥×0 COMBO!</div>
         <div class="game-header">
             <div class="game-header-top">
@@ -965,6 +1025,10 @@
                 <button id="check-btn" class="btn">決定！</button>
                 <button id="next-btn" class="btn">次へ進む ＞</button>
             </div>
+        </div>
+        <div id="gameover-overlay">
+            <div id="gameover-text">GAME OVER</div>
+            <button id="gameover-home-btn">ホームに戻る</button>
         </div>
     </div>
 
