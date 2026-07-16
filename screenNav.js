@@ -81,3 +81,7 @@ document.getElementById("home-gacha-btn")
 // ガチャ画面 → ホームに戻る
 document.getElementById("gacha-back-btn")
     ?.addEventListener("click", goHome);
+
+// game.js から「ホームに戻りたい」という要求を受けたら戻る
+// (ゲームオーバー時・全問終了時など)
+window.addEventListener("hatchoria:requestHome", goHome);
