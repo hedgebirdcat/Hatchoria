@@ -1132,11 +1132,6 @@
             updateDisplay();
         });
 
-        window.addEventListener("hatchoria:enterGacha", () => {
-            resetGachaState();
-            updateDisplay();
-        });
-
         // ⚙️ 設定画面連動の変数群
         const settingBtn = document.getElementById("setting-btn");
         const settingMenuOverlay = document.getElementById("setting-menu-overlay");
@@ -1203,22 +1198,13 @@
         // 単語出題・クイズ判定は game.js が担当するため、
         // ここには quizData は置かない
 
-        const rewards = [
-            { name: "賢者の石 🪨", icon: "🪨", rarity: "ULTRA", cssClass: "item-ultra", tagClass: "tag-ultra" },
-            { name: "聖なる遺体 💀", icon: "💀", rarity: "LEGENDARY", cssClass: "item-legendary", tagClass: "tag-legendary" },
-            { name: "神秘の果実 🍋", icon: "🍋", rarity: "RARE", cssClass: "item-rare", tagClass: "tag-rare" },
-            { name: "道化師の仮面 🎭", icon: "🎭", rarity: "COMMON", cssClass: "item-common", tagClass: "tag-common" }
-        ];
-
         let username = ""; let usercode = "";
         let loginStreak = 1; 
 
         // レベル・XP・コインは game.js が読み込む Firestore のプレイヤー
         // データ(window.HatchoriaPlayer)を直接参照する。
         // ここではローカルの lv/xp/goal/coins は持たない。
-
-        let inventory = []; 
-        let currentGachaReward = null; 
+        // ガチャ機能(rewards・inventory等)は gacha.js に分離済み。
 
         function generateUserCode() {
             const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
@@ -1234,7 +1220,6 @@
                 username: username, 
                 usercode: usercode, 
                 loginStreak: loginStreak,
-                inventory: inventory,
                 lastLoginDate: localStorage.getItem("egg_game_last_login") 
             };
             localStorage.setItem("egg_game_save", JSON.stringify(dataToSave));
@@ -1248,7 +1233,6 @@
                     if (parsed.username !== undefined) username = parsed.username;
                     if (parsed.usercode !== undefined) usercode = parsed.usercode;
                     if (parsed.loginStreak !== undefined) loginStreak = parsed.loginStreak;
-                    if (parsed.inventory !== undefined) inventory = parsed.inventory;
                 } catch(e) { console.error(e); }
             }
 
@@ -1306,97 +1290,13 @@
             }
         }
 
-        function resetGachaState() {
-            document.getElementById("gacha-main-box").innerHTML = "📦";
-            document.getElementById("gacha-draw-action-btn").style.display = "inline-block";
-            document.getElementById("gacha-choice-container").style.display = "none";
-            currentGachaReward = null;
-        }
-
-        document.getElementById("gacha-draw-action-btn").addEventListener("click", () => {
-            if (!window.HatchoriaPlayer) return;
-            if (window.HatchoriaPlayer.coins < 50) {
-                alert("🪙 コインが足りません！ (1回50コイン必要です)");
-                return;
-            }
-            window.HatchoriaPlayer.coins -= 50;
-            updateDisplay();
-            window.HatchoriaSave.save();
-
-            document.getElementById("gacha-draw-action-btn").style.display = "none";
-
-            const mainBox = document.getElementById("gacha-main-box");
-            mainBox.innerHTML = "🌀";
-            
-            setTimeout(() => {
-                const rand = Math.random() * 100;
-                if (rand < 10) {
-                    currentGachaReward = rewards[0]; 
-                } else if (rand < 25) {
-                    currentGachaReward = rewards[1]; 
-                } else if (rand < 55) {
-                    currentGachaReward = rewards[2]; 
-                } else {
-                    currentGachaReward = rewards[3]; 
-                }
-                
-                mainBox.innerHTML = `
-                    <div>
-                        <div class="rarity-tag ${currentGachaReward.tagClass}">${currentGachaReward.rarity}</div>
-                        <div style="font-size: 60px; margin-bottom: 5px;">${currentGachaReward.icon}</div>
-                        <div class="nyanko-black-box">
-                            <div class="${currentGachaReward.cssClass}" style="font-size:22px; white-space:nowrap;">
-                                ${currentGachaReward.name}
-                            </div>
-                        </div>
-                    </div>
-                `;
-                playFireworks(); 
-
-                document.getElementById("gacha-choice-container").style.display = "flex";
-            }, 800);
-        });
-
-        document.getElementById("gacha-convert-btn").addEventListener("click", () => {
-            if (!currentGachaReward || !window.HatchoriaPlayer) return;
-            window.HatchoriaPlayer.coins += 10; 
-            const mainBox = document.getElementById("gacha-main-box");
-            mainBox.innerHTML = `
-                <div class="gacha-result-msg">
-                    🪙 コインに変換しました！<br>
-                    <span style="color:#ff9800; font-size:22px;">+10 コイン</span>
-                </div>
-            `;
-            document.getElementById("gacha-choice-container").style.display = "none";
-            setTimeout(resetGachaState, 2500);
-            updateDisplay();
-            window.HatchoriaSave.save();
-        });
-
-        document.getElementById("gacha-keep-btn").addEventListener("click", () => {
-            if (!currentGachaReward) return;
-            inventory.push(currentGachaReward.name); 
-            const mainBox = document.getElementById("gacha-main-box");
-            mainBox.innerHTML = `
-                <div class="gacha-result-msg" style="display:flex; flex-direction:column; align-items:center; justify-content:center;">
-                    <div class="nyanko-black-box">
-                        <span class="${currentGachaReward.cssClass}" style="font-size:22px;">
-                            ${currentGachaReward.name}
-                        </span>
-                    </div>
-                    <div>をゲットした！🎒</div>
-                </div>
-            `;
-            document.getElementById("gacha-choice-container").style.display = "none";
-            setTimeout(resetGachaState, 2500);
-            updateDisplay();
-            saveGameData();
-        });
+        // ガチャ機能(抽選・変換・所持)は gacha.js に分離済み
 
         // ホーム画面・ガチャ画面の表示更新のみを行う。
         // レベル・XP・コインは game.js が読み込んだ Firestore の
         // プレイヤーデータ(window.HatchoriaPlayer)をそのまま参照する。
         // ゲーム画面(ライフ・コンボ等)の表示は game.js が管理する。
+        // ガチャ画面のコイン表示は gacha.js が管理する。
         function updateDisplay(){
             const p = window.HatchoriaPlayer;
 
@@ -1409,8 +1309,6 @@
             document.getElementById("home-xp-text").innerText = `${p.exp} / ${p.goal} XP`;
             document.getElementById("home-coin-text").innerText = "🪙 " + p.coins; 
             document.getElementById("egg-area").innerHTML = `<img id="monsterImage" src="${eggImage}" alt="egg">`;
-
-            document.getElementById("gacha-screen-coin-text").innerText = "所持コイン: 🪙 " + p.coins;
         }
 
         function playFireworks(){ 
@@ -1450,6 +1348,9 @@
             } 
         }
 
+        // gacha.js など、他のモジュールから花火演出を呼べるように公開する
+        window.playFireworks = playFireworks;
+
         // ゲーム画面(クイズ)のボタン・キー操作は game.js が管理する
 
         // game.js がFirestoreからプレイヤーデータを読み込み終えたら
@@ -1462,6 +1363,7 @@
     </script>
     <script type="module" src="screenNav.js"></script>
     <script type="module" src="game.js"></script>
+    <script type="module" src="gacha.js"></script>
     <script type="module" src="home.js"></script>
 </body>
 </html>
