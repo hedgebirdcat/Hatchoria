@@ -40,6 +40,7 @@ const COMBO_BONUS_XP = 5;       // コンボボーナスの増加量
 const LEVELUP_COIN_REWARD = 10; // レベルアップ時のコイン報酬
 const DEFAULT_GOAL = 50;        // 初期の必要XP(Firestoreに未設定の場合)
 const DEFAULT_MONSTER = "leaf"; // モンスター種類が未設定の場合のデフォルト
+const QUESTIONS_PER_ROUND = 10; // 1ラウンドの出題数
 
 // レベルに応じた進化段階(home.jsのupdateMonster()と同じ基準)
 function getMonsterStage(level) {
@@ -62,6 +63,7 @@ let currentQuiz = null;
 let combo = 0;
 let life = MAX_LIFE;
 let correctAnswersCount = 0;
+let questionsAnswered = 0;
 let isBonusStage = false;
 let isWaiting = false;
 
@@ -88,7 +90,10 @@ function cacheElements() {
         nextBtn: document.getElementById("next-btn"),
         judgeOverlay: document.getElementById("judge-overlay"),
         judgeMark: document.getElementById("judge-mark"),
-        bonusStartLogo: document.getElementById("bonus-start-logo")
+        bonusStartLogo: document.getElementById("bonus-start-logo"),
+        questionCounter: document.getElementById("question-counter"),
+        gameoverOverlay: document.getElementById("gameover-overlay"),
+        gameoverHomeBtn: document.getElementById("gameover-home-btn")
     };
 
 }
@@ -181,6 +186,13 @@ window.addEventListener("DOMContentLoaded", () => {
         els.checkBtn.addEventListener("click", handleCheck);
         els.nextBtn.addEventListener("click", handleNext);
 
+        els.gameoverHomeBtn.addEventListener("click", () => {
+
+            els.gameoverOverlay.classList.remove("show", "show-text");
+            window.dispatchEvent(new Event("hatchoria:requestHome"));
+
+        });
+
         window.addEventListener("keydown", (e) => {
 
             if (e.key !== "Enter") return;
@@ -216,6 +228,9 @@ function initializeGame() {
     life = MAX_LIFE;
     combo = 0;
     correctAnswersCount = 0;
+    questionsAnswered = 0;
+
+    els.gameoverOverlay.classList.remove("show", "show-text");
 
     nextQuestion();
     updateDisplay();
@@ -247,6 +262,8 @@ function nextQuestion() {
 
     isWaiting = false;
 
+    updateQuestionCounter();
+
 }
 
 // ======================================
@@ -256,6 +273,11 @@ function nextQuestion() {
 function handleNext() {
 
     if (life <= 0) return;
+
+    if (questionsAnswered >= QUESTIONS_PER_ROUND) {
+        finishRound();
+        return;
+    }
 
     nextQuestion();
     updateDisplay();
@@ -283,6 +305,9 @@ function handleCheck() {
         handleWrong();
 
     }
+
+    questionsAnswered++;
+    updateQuestionCounter();
 
     els.checkBtn.style.display = "none";
 
@@ -369,14 +394,36 @@ function handleWrong() {
 
 function handleGameOver() {
 
-    els.qDisplay.innerText = "GAME OVER";
+    els.checkBtn.style.display = "none";
+    els.nextBtn.style.display = "none";
+
+    // 画面が2秒かけて黒くフェードし、
+    // 完全に暗くなってから GAME OVER の文字とホームボタンを出す
+    els.gameoverOverlay.classList.add("show");
+
+    setTimeout(() => {
+
+        els.gameoverOverlay.classList.add("show-text");
+
+    }, 2000);
+
+}
+
+// ======================================
+// ラウンド終了(規定数の出題を終えた)
+// ======================================
+
+function finishRound() {
+
+    els.qDisplay.innerText = "クリア！おつかれさま";
+    els.checkBtn.style.display = "none";
     els.nextBtn.style.display = "none";
 
     setTimeout(() => {
 
-        initializeGame();
+        window.dispatchEvent(new Event("hatchoria:requestHome"));
 
-    }, 2000);
+    }, 1500);
 
 }
 
@@ -460,6 +507,13 @@ function shakeLife() {
     setTimeout(() => {
         els.lifeContainer.classList.remove("shake-anim");
     }, 500);
+
+}
+
+function updateQuestionCounter() {
+
+    const remaining = QUESTIONS_PER_ROUND - questionsAnswered;
+    els.questionCounter.innerText = `${remaining}/${QUESTIONS_PER_ROUND}`;
 
 }
 
