@@ -1,0 +1,1330 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>単語育成ゲーム Ultimate アカウント＆設定対応版</title>
+    <style>
+        /* ==========================================================================
+           共通設定 & ベースCSS (スクロール完全防止)
+           ========================================================================== */
+        :root {
+            --correct-color: #ff5252;
+            --wrong-color: #448aff;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden; 
+            position: fixed;  
+            font-family: sans-serif;
+            background: linear-gradient(to bottom, #dff6ff 0%, #bde0fe 60%, #a5d6a7 100%);
+            transition: 0.6s;
+            overflow-y: hidden;
+            overscroll-behavior: none;
+        }
+
+        body.bonus-active {
+            background: linear-gradient(to bottom, #fff176 0%, #ffd54f 45%, #ff9800 100%) !important;
+        }
+
+        .screen {
+            width: 100vw;
+            height: 100vh;
+            position: fixed;
+            inset: 0;
+            overflow: hidden;
+        }
+
+        /* ==========================================================================
+           👤 アカウント作成 / 設定メニュー / プロフィール ポップアップ共通 CSS
+           ========================================================================== */
+        .game-overlay {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(6px);
+            z-index: 50000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        .game-overlay.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .popup-card {
+            background: white;
+            width: 90%;
+            max-width: 400px;
+            border-radius: 25px;
+            padding: 30px;
+            text-align: center;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.4);
+            border: 4px solid #42a5f5;
+        }
+        .popup-title {
+            font-size: 24px;
+            font-weight: 900;
+            color: #1e88e5;
+            margin-bottom: 15px;
+        }
+        .popup-subtitle {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 20px;
+            line-height: 1.4;
+        }
+
+        /* アカウント作成用追加 */
+        #account-name-input {
+            width: 100%;
+            padding: 14px;
+            font-size: 18px;
+            border: 2px solid #ddd;
+            border-radius: 999px;
+            outline: none;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .primary-btn {
+            background: linear-gradient(135deg, #42a5f5, #1e88e5);
+            color: white;
+            border: none;
+            padding: 14px 50px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 999px;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(30,136,229,0.3);
+        }
+        .secondary-btn {
+            background: #eceff1;
+            color: #37474f;
+            border: none;
+            padding: 12px 40px;
+            font-size: 15px;
+            font-weight: bold;
+            border-radius: 999px;
+            cursor: pointer;
+            margin-top: 10px;
+            width: 100%;
+        }
+
+        /* ⚙️ 設定メニュー内ボタン群 */
+        .menu-list-btn {
+            width: 100%;
+            padding: 15px;
+            font-size: 16px;
+            font-weight: bold;
+            color: #333;
+            background: #f5f5f5;
+            border: 2px solid #e0e0e0;
+            border-radius: 15px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            text-align: left;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: 0.2s;
+        }
+        .menu-list-btn:hover {
+            background: #e3f2fd;
+            border-color: #90caf9;
+        }
+
+        /* 📋 プロフィール画面用追加 */
+        .profile-info-box {
+            background: #f8f9fa;
+            border: 2px solid #cfd8dc;
+            border-radius: 15px;
+            padding: 15px;
+            margin-bottom: 20px;
+            text-align: left;
+        }
+        .profile-label {
+            font-size: 12px;
+            color: #78909c;
+            font-weight: bold;
+            margin-bottom: 4px;
+        }
+        .profile-value {
+            font-size: 18px;
+            font-weight: bold;
+            color: #263238;
+            margin-bottom: 12px;
+            word-break: break-all;
+        }
+        .code-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #ffffff;
+            border: 1px solid #b0bec5;
+            padding: 8px 12px;
+            border-radius: 10px;
+        }
+        .code-text {
+            font-family: monospace;
+            font-size: 18px;
+            font-weight: bold;
+            color: #e91e63;
+            letter-spacing: 1px;
+        }
+        .copy-btn {
+            background: #42a5f5;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            font-size: 12px;
+            font-weight: bold;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        .copy-btn.copied {
+            background: #4caf50;
+        }
+
+        /* ==========================================================================
+           1. HOME SCREEN (ホーム画面)
+           ========================================================================== */
+        #home-screen {
+            display: block;
+        }
+
+        #level-panel {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            background: white;
+            padding: 12px;
+            border-radius: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,.15);
+            z-index: 10;
+        }
+        #home-username-display {
+            font-size: 14px;
+            font-weight: bold;
+            color: #1e88e5;
+            margin-bottom: 4px;
+        }
+        #xp-bar {
+            width: 200px;
+            height: 12px;
+            background: #ddd;
+            border-radius: 999px;
+            overflow: hidden;
+            margin: 6px 0 4px 0;
+        }
+        #xp-fill-home {
+            width: 0%; 
+            height: 100%;
+            background: linear-gradient(90deg, #42a5f5, #7c4dff);
+            border-radius: 999px;
+            transition: 0.35s;
+        }
+        #home-status-bottom {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: bold;
+            font-size: 13px;
+        }
+        #home-xp-text { color: #333; }
+        #home-coin-text { color: #ff9800; font-size: 14px; }
+
+        #setting-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            width: 50px;
+            height: 50px;
+            border: none;
+            border-radius: 50%;
+            font-size: 24px;
+            background: white;
+            box-shadow: 0 5px 15px rgba(0,0,0,.15);
+            cursor: pointer;
+            z-index: 10;
+        }
+
+        #egg-area {
+            position: absolute;
+            left: 25%;
+            top: 50%; 
+            transform: translate(-50%, -50%); 
+            z-index: 5;
+            width: 250px;
+            height: 250px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        #egg-area img {
+            width: 100%;
+            height: auto;
+            object-fit: contain;
+            filter: drop-shadow(0 0 20px rgba(255,255,255,0.7)) drop-shadow(0 0 30px rgba(0,0,0,0.25));
+        }
+
+        .float-char-anim {
+            animation: floatEgg 4s ease-in-out infinite;
+        }
+
+        @keyframes floatEgg {
+            0% { transform: translate(-50%, -50%) translateY(0px); }
+            50% { transform: translate(-50%, -50%) translateY(-15px); }
+            100% { transform: translate(-50%, -50%) translateY(0px); }
+        }
+
+        #right-menu-container {
+            position: absolute;
+            left: 75%;
+            top: 42%; 
+            transform: translate(-50%, -50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+        }
+
+        #diamond-menu {
+            position: relative;
+            width: 360px;
+            height: 420px; 
+        }
+        .diamond {
+            position: absolute;
+            width: 150px;
+            height: 220px;
+            background: white;
+            clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 8px 20px rgba(0,0,0,.25);
+            transition: .3s;
+            cursor: pointer;
+        }
+        .diamond:hover:not(.locked) { transform: scale(1.05); }
+        .diamond::before {
+            content: "";
+            position: absolute;
+            top: 10px; left: 20px; right: 20px;
+            height: 45%;
+            background: linear-gradient(rgba(255,255,255,.9), rgba(255,255,255,0));
+            clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
+        }
+        .diamond-content {
+            text-align: center;
+            font-weight: bold;
+            font-size: 20px;
+            line-height: 1.5;
+            color: #222;
+            z-index: 2;
+        }
+
+        .diamond:nth-child(1) { left: 105px; top: 0; }        
+        .diamond.left { left: 15px; top: 115px; }             
+        .diamond.right { left: 195px; top: 115px; }           
+        .diamond.adventure { left: 105px; top: 230px; }       
+
+        .locked {
+            background: linear-gradient(135deg, #ffffff 0%, #e0e0e0 45%, #bdbdbd 100%) !important;
+            cursor: not-allowed !important;
+        }
+        .lock-line {
+            margin-top: 12px;
+            font-size: 24px;
+        }
+
+        .home-footer-menu {
+            margin-top: 55px; 
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px; 
+        }
+
+        .circle-menu-btn {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            background: white;
+            border: 3px solid #ffb74d;
+            font-size: 28px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            box-shadow: 0 6px 14px rgba(0,0,0,0.18);
+            transition: transform 0.2s, background-color 0.2s;
+            position: relative;
+        }
+        .circle-menu-btn:hover {
+            transform: scale(1.1);
+            background-color: #fffde7;
+        }
+        .circle-menu-btn::after {
+            content: attr(data-label);
+            position: absolute;
+            bottom: -22px;
+            font-size: 11px;
+            font-weight: bold;
+            color: #333;
+            white-space: nowrap;
+            text-shadow: 1px 1px 0px white;
+        }
+        
+        .circle-menu-btn.dummy-btn {
+            border-color: #b0bec5;
+            background: #eceff1;
+            font-size: 22px;
+            color: #78909c;
+        }
+
+        /* ==========================================================================
+           📦 4. GACHA SCREEN (ガチャ専用画面)
+           ========================================================================== */
+        #gacha-screen {
+            display: none;
+            background: linear-gradient(to bottom, #f3e5f5, #e1bee7, #ce93d8);
+            text-align: center;
+        }
+        
+        .nav-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            padding: 12px 25px;
+            background: white;
+            border: none;
+            border-radius: 15px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0,0,0,.2);
+            z-index: 100;
+        }
+        
+        .gacha-container {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 90%;
+            max-width: 400px;
+            background: white;
+            padding: 30px 20px;
+            border-radius: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            border: 4px solid #ba68c8;
+        }
+        .gacha-screen-title {
+            font-size: 28px;
+            font-weight: 900;
+            color: #7b1fa2;
+            margin-bottom: 10px;
+        }
+        .gacha-coin-status {
+            font-size: 18px;
+            font-weight: bold;
+            color: #ff9800;
+            margin-bottom: 25px;
+        }
+        #gacha-main-box {
+            min-height: 180px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 80px;
+            background: #fdf6ff;
+            border-radius: 20px;
+            border: 3px dashed #ba68c8;
+            margin-bottom: 20px;
+            padding: 15px;
+        }
+        .gacha-draw-action-btn {
+            background: linear-gradient(135deg, #ab47bc, #7b1fa2);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 20px;
+            font-weight: bold;
+            border-radius: 999px;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(123,31,162,0.4);
+            transition: 0.2s;
+        }
+
+        #gacha-choice-container {
+            display: none; 
+            justify-content: space-between;
+            width: 100%;
+            padding: 0 5px;
+            margin-top: 10px;
+        }
+        .gacha-choice-btn {
+            width: 48%;
+            padding: 14px 10px;
+            font-size: 14px;
+            font-weight: bold;
+            border: none;
+            border-radius: 999px;
+            cursor: pointer;
+            transition: 0.2s;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            color: white;
+        }
+        #gacha-convert-btn {
+            background: linear-gradient(135deg, #ff7043, #f4511e); 
+        }
+        #gacha-keep-btn {
+            background: linear-gradient(135deg, #26a69a, #00897b); 
+        }
+        .gacha-choice-btn:hover {
+            transform: scale(1.03);
+        }
+
+        .nyanko-black-box {
+            background-color: rgba(0, 0, 0, 0.85); 
+            border: 2px solid #555;                 
+            border-radius: 8px;                    
+            padding: 8px 16px;                     
+            display: inline-block;                 
+            margin: 8px auto;                      
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5); 
+        }
+
+        .rarity-tag {
+            font-size: 13px;
+            font-weight: 900;
+            padding: 2px 8px;
+            border-radius: 5px;
+            display: inline-block;
+            margin-bottom: 5px;
+            letter-spacing: 1px;
+        }
+
+        .item-ultra {
+            color: #ffffff !important;
+            font-weight: 900;
+            text-shadow: 0 0 10px #ffffff, 0 0 20px #e0e0e0, 0 0 30px #ffffff;
+            animation: spookyGlow 2s infinite alternate;
+        }
+        .tag-ultra { background: #616161; color: #ffffff; box-shadow: 0 0 8px #ffffff; }
+        @keyframes spookyGlow {
+            0% { filter: drop-shadow(0 0 2px rgba(255,255,255,0.6)); opacity: 0.85; }
+            100% { filter: drop-shadow(0 0 15px rgba(255,255,255,1)); opacity: 1; }
+        }
+
+        .item-legendary {
+            color: #ffd700 !important;
+            font-weight: 900;
+            text-shadow: 0 0 8px #fff59d, 0 0 20px #ffd700, 0 0 30px #ffb300;
+            filter: drop-shadow(0 0 8px rgba(255,215,0,0.8));
+        }
+        .tag-legendary { background: #ffd700; color: #212121; box-shadow: 0 0 8px #ffd700; }
+
+        .item-rare {
+            color: #29b6f6 !important;
+            font-weight: 900;
+            text-shadow: 0 0 6px #b3e5fc, 0 0 15px #0288d1;
+            filter: drop-shadow(0 0 5px rgba(3,169,244,0.6));
+        }
+        .tag-rare { background: #0288d1; color: #ffffff; }
+
+        .item-common {
+            color: #eeeeee !important;
+            font-weight: bold;
+        }
+        .tag-common { background: #9e9e9e; color: #ffffff; }
+
+        .gacha-result-msg {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+            margin-top: 10px;
+            line-height: 1.5;
+            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        @keyframes popIn { 0% { transform: scale(0.8); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+
+        /* ==========================================================================
+           🎁 ログインボーナス用ポップアップ
+           ========================================================================== */
+        #login-bonus-overlay {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            z-index: 20000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.4s ease;
+        }
+        #login-bonus-overlay.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .bonus-card {
+            background: white;
+            width: 90%;
+            max-width: 420px;
+            border-radius: 30px;
+            padding: 30px;
+            text-align: center;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+            transform: translateY(-40px) scale(0.7); 
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border: 4px solid #fff176;
+        }
+        #login-bonus-overlay.show .bonus-card { transform: translateY(-40px) scale(1); } 
+        .bonus-title { font-size: 26px; font-weight: 900; color: #ff9800; margin-bottom: 5px; }
+        .bonus-subtitle { font-size: 14px; color: #666; margin-bottom: 20px; }
+        .bonus-days-counter { font-size: 28px; font-weight: 800; color: #d32f2f; margin-bottom: 5px; }
+        .bonus-gift-box { font-size: 70px; margin-bottom: 15px; animation: giftWobble 2s ease infinite; display: inline-block; }
+        @keyframes giftWobble { 0%, 100% { transform: rotate(0deg) scale(1); } 5%, 15% { transform: rotate(-8deg) scale(1.05); } 10%, 20% { transform: rotate(8deg) scale(1.05); } 25% { transform: rotate(0deg) scale(1); } }
+        .bonus-reward-text { font-size: 22px; font-weight: bold; color: #333; margin-bottom: 25px; background: #fff9c4; padding: 10px 20px; border-radius: 999px; display: inline-block; }
+        .bonus-close-btn { background: linear-gradient(135deg, #ffb74d, #ff9800); color: white; border: none; padding: 14px 45px; font-size: 18px; font-weight: bold; border-radius: 999px; cursor: pointer; }
+
+        /* ==========================================================================
+           2. SELECTION SCREEN (選択画面)
+           ========================================================================== */
+        #story-adventure-screen {
+            display: none;
+            background: linear-gradient(to bottom, #dff6ff, #bde0fe);
+        }
+        #home-btn { 
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 120px; 
+            height: 55px;
+            background: white;
+            border: none;
+            border-radius: 15px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0,0,0,.2);
+        }
+        #back-btn { left: 20px; }
+
+        .choice-diamond {
+            position: absolute;
+            width: 180px;
+            height: 260px;
+            background: white;
+            clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 8px 20px rgba(0,0,0,.25);
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .choice-diamond:hover:not(.locked) { transform: translateY(-50%) scale(1.05); }
+        .story-choice { left: 18%; top: 50%; transform: translateY(-50%); }
+        .adventure-choice { right: 18%; top: 50%; transform: translateY(-50%); background: #fffde7; }
+
+        /* ==========================================================================
+           3. GAME SCREEN (タイピング画面)
+           ========================================================================== */
+        #game-screen {
+            display: none;
+        }
+        #life-container {
+            position: fixed;
+            top: 20px;
+            left: 160px; 
+            font-size: 32px;
+            letter-spacing: 5px;
+            z-index: 3000;
+            background: rgba(255,255,255,0.85);
+            padding: 5px 15px;
+            border-radius: 15px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        .shake-anim { animation: shake 0.5s ease-in-out; }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 20%, 60% { transform: translateX(-8px); } 40%, 80% { transform: translateX(8px); } }
+        
+        .game-header {
+            position: fixed;
+            top: 20px;
+            left: 55%;
+            transform: translateX(-50%);
+            background: white;
+            border-radius: 30px;
+            padding: 12px 35px;
+            display: flex;
+            flex-direction: column; 
+            align-items: center;
+            gap: 4px;
+            z-index: 3000;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.15);
+        }
+        .game-header-top { display: flex; align-items: center; gap: 20px; }
+        #game-lv-num { font-size: 24px; font-weight: 900; color: #7c4dff; }
+        .game-xp-bar-container { width: 230px; height: 18px; background: #eee; border-radius: 999px; overflow: hidden; position: relative; }
+        #game-xp-fill { width: 0%; height: 100%; background: linear-gradient(90deg, #42a5f5, #7c4dff); transition: 0.35s; }
+        
+        /* 🛠️ 【バグ修正】XPテキストとコイン表示が絶対に重ならないようにフレックスボックス化 */
+        .game-header-bottom { 
+            display: flex; 
+            justify-content: space-between; /* 左右の両端にきれいに分散させる */
+            align-items: center; 
+            width: 100%; 
+            min-width: 230px; 
+            font-weight: bold; 
+            font-size: 14px; 
+            color: #444; 
+            padding: 0 5px; 
+            margin-top: 6px;
+            position: relative;
+        }
+
+        #game-xp-popup-area {
+            position: absolute;
+            right: 5px;
+            top: 0px;
+            white-space: nowrap; 
+            display: inline-block;
+            z-index: 3100;
+        }
+
+        .xp-gain-popup {
+            font-weight: 900;
+            font-size: 15px;
+            color: #1e88e5;
+            animation: popupFadeUp 1.8s ease forwards;
+            text-shadow: 1px 1px 0px white;
+        }
+        .xp-gain-popup.special-bonus {
+            color: #ff9800;
+            animation: popupFadeUp 1.8s ease forwards;
+            text-shadow: 1px 1px 0px white;
+        }
+
+        @keyframes popupFadeUp {
+            0% { transform: translateY(5px); opacity: 0; }
+            15% { transform: translateY(0px); opacity: 1; }
+            80% { transform: translateY(0px); opacity: 1; }
+            100% { transform: translateY(-12px); opacity: 0; }
+        }
+        
+        #combo-display { position: fixed; top: 130px; right: 45px; font-size: 38px; font-weight: 900; color: #ff5722; z-index: 6000; text-shadow: 0 0 8px white; }
+        .main-stage { position: absolute; top: 46%; left: 50%; transform: translate(-50%, -50%); text-align: center; width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .game-float-char-anim { animation: gameFloatEgg 4s ease-in-out infinite; }
+        @keyframes gameFloatEgg { 0% { transform: translateY(0px); } 50% { transform: translateY(-20px); } 100% { transform: translateY(0px); } }
+        #char-display img { width: 200px; height: auto; object-fit: contain; filter: drop-shadow(0 0 20px rgba(255,255,255,0.8)); }
+        #q-display { margin-top: 15px; font-size: 42px; font-weight: 900; background: rgba(255,255,255,0.92); padding: 15px 45px; border-radius: 30px; display: inline-block; box-shadow: 0 8px 20px rgba(0,0,0,0.18); }
+        .ui-bottom { position: fixed; bottom: 30px; width: 100%; padding: 0 30px; display: flex; justify-content: space-between; align-items: center; z-index: 3100; }
+        #ans-input { width: 320px; padding: 20px; border: none; outline: none; border-radius: 999px; font-size: 24px; box-shadow: 0 5px 15px rgba(0,0,0,0.15); }
+        .btn { border: none; padding: 18px 40px; border-radius: 999px; font-size: 22px; font-weight: 900; color: white; cursor: pointer; }
+        #check-btn { background: #66bb6a; }
+        #next-btn { background: #42a5f5; display: none; }
+        
+        #heart-break-overlay { 
+            position: fixed; 
+            top: 50%; left: 50%; 
+            transform: translate(-50%, -50%) scale(0); 
+            font-size: 30vh; 
+            z-index: 8500; 
+            pointer-events: none; 
+            display: none; 
+            text-shadow: 0px 4px 15px rgba(0,0,0,0.3);
+        }
+        .animate-heart-timeline { 
+            display: block !important; 
+            animation: heartTimelineSequence 1.5s ease-in-out forwards; 
+        }
+        
+        @keyframes heartTimelineSequence { 
+            0% { transform: translate(-50%, -50%) scale(0); opacity: 0; } 
+            15% { transform: translate(-50%, -50%) scale(1); opacity: 1; } 
+            48% { transform: translate(-50%, -50%) scale(1); opacity: 1; } 
+            52% { transform: translate(-50%, -50%) scale(1); opacity: 1; } 
+            85% { transform: translate(-50%, -50%) scale(1); opacity: 1; } 
+            100% { transform: translate(-50%, -50%) scale(0); opacity: 0; } 
+        }
+        
+        #judge-overlay { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); opacity: 0; pointer-events: none; z-index: 7000; display: none; }
+        #judge-overlay.show { animation: judgeFade 1s ease-out forwards; }
+        #judge-mark { font-size: 35vh; font-weight: 900; }
+        @keyframes judgeFade { 0% { opacity: 0; transform: translate(-50%,-50%) scale(0); } 25% { opacity: 1; transform: translate(-50%,-50%) scale(1.15); } 100% { opacity: 0; transform: translate(-50%,-50%) scale(0.7); } }
+        
+        #priority-message { 
+            position: fixed; 
+            top: 52%; left: 50%; 
+            transform: translate(-50%, -50%); 
+            font-size: 5.5vw; 
+            font-weight: 900; 
+            text-align: center; 
+            white-space: nowrap; 
+            z-index: 10000; 
+            opacity: 0; 
+            pointer-events: none; 
+            text-shadow: 2px 2px 0px #000, -2px -2px 0px #000, 2px -2px 0px #000, -2px 2px 0px #000, 0px 4px 10px rgba(0,0,0,0.5);
+        }
+        #priority-message.show { opacity: 1; transform: translate(-50%, -50%) scale(1); transition: transform 0.2s ease, opacity 0.2s ease; }
+
+        .priority-blink {
+            animation: pinkRedBlink 0.1s infinite alternate !important;
+        }
+
+        @keyframes pinkRedBlink {
+            0% { color: #ff69b4 !important; } 
+            100% { color: #ff0000 !important; } 
+        }
+        
+        #levelup-overlay { position: fixed; inset: 0; overflow: hidden; pointer-events: none; display: none; z-index: 5000; }
+        #levelup-overlay::before { content: ""; position: absolute; width: 100%; height: 200%; left: 0; bottom: -100%; background: linear-gradient(to top, rgba(33,150,243,0.4), rgba(103,58,183,0.3), rgba(255,255,255,0)); animation: levelGlow 2s ease-out forwards; }
+        @keyframes levelGlow { 0% { transform: translateY(100%); opacity: 0; } 100% { transform: translateY(-20%); opacity: 1; } }
+        .sparkle { position: absolute; width: 12px; height: 12px; border-radius: 50%; background: white; box-shadow: 0 0 10px white; animation: sparkleMove 2s linear forwards; }
+        @keyframes sparkleMove { 0% { transform: translateY(0) scale(0.5); opacity: 0; } 20% { opacity: 1; } 100% { transform: translateY(-120vh) scale(1.5); opacity: 0; } }
+        
+        #bonus-start-logo { 
+            position: fixed; 
+            top: 50%; left: 50%; 
+            transform: translate(-50%, -50%) scale(0) rotate(0deg); 
+            font-size: 10vw; 
+            font-weight: 900; 
+            color: #fff176; 
+            z-index: 9500; 
+            pointer-events: none; 
+            white-space: nowrap; 
+            text-shadow: 0 0 20px rgba(255,152,0,0.8), 0 0 40px rgba(255,235,59,0.5);
+            display: none;
+        }
+        .bonus-anime-active {
+            display: block !important;
+            animation: bonusPerfectSequence 2.5s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+        }
+        @keyframes bonusPerfectSequence {
+            0% { transform: translate(-50%, -50%) scale(0) rotate(0deg); opacity: 1; }
+            40% { transform: translate(-50%, -50%) scale(1) rotate(720deg); opacity: 1; }
+            60% { transform: translate(-50%, -50%) scale(1) rotate(720deg); opacity: 1; }
+            100% { transform: translate(-50%, -50%) scale(1.2) rotate(750deg); opacity: 0; }
+        }
+
+        #firework-layer { position: fixed; inset: 0; pointer-events: none; z-index: 4500; overflow: hidden; }
+    </style>
+</head>
+<body>
+
+    <div id="firework-layer"></div>
+    <div id="levelup-overlay"></div>
+    <div id="bonus-start-logo">ボーナス</div>
+    <div id="priority-message"></div>
+    <div id="judge-overlay"><div id="judge-mark"></div></div>
+    <div id="heart-break-overlay">❤️</div>
+
+    <div id="account-creation-overlay" class="game-overlay">
+        <div class="popup-card">
+            <div class="popup-title">🎮 アカウント作成</div>
+            <div class="popup-subtitle">ゲームで使用するあなたのアカウント名を入力してください。<br>※名前決定時に専用のユーザーコードが発行されます。</div>
+            <input type="text" id="account-name-input" placeholder="アカウント名（12文字以内）" maxlength="12">
+            <button id="account-submit-btn" class="primary-btn">決定してゲーム開始</button>
+        </div>
+    </div>
+
+    <div id="setting-menu-overlay" class="game-overlay">
+        <div class="popup-card" style="border-color: #b0bec5;">
+            <div class="popup-title" style="color: #37474f;">⚙️ 設定メニュー</div>
+            <div style="margin-top: 20px;">
+                <button id="menu-profile-btn" class="menu-list-btn">👤 プロフィール確認</button>
+                <button id="menu-reset-btn" class="menu-list-btn" style="color:#d32f2f;">🚨 セーブデータのリセット</button>
+            </div>
+            <button id="setting-menu-close-btn" class="secondary-btn">閉じる</button>
+        </div>
+    </div>
+
+    <div id="profile-overlay" class="game-overlay">
+        <div class="popup-card" style="border-color: #e91e63;">
+            <div class="popup-title" style="color: #e91e63;">👤 プロフィール</div>
+            
+            <div class="profile-info-box">
+                <div class="profile-label">アカウント名</div>
+                <div id="profile-name-display" class="profile-value">---</div>
+                
+                <div class="profile-label">ユーザーコード（フレンド用）</div>
+                <div class="code-row">
+                    <span id="profile-code-display" class="code-text">----------</span>
+                    <button id="profile-copy-btn" class="copy-btn">コピー</button>
+                </div>
+            </div>
+
+            <button id="profile-close-btn" class="secondary-btn">戻る</button>
+        </div>
+    </div>
+
+    <div id="login-bonus-overlay">
+        <div class="bonus-card">
+            <div class="bonus-title">🎉 デイリーボーナス！</div>
+            <div class="bonus-subtitle">今日もゲームを開いてくれてありがとう！</div>
+            <div id="bonus-days-display" class="bonus-days-counter">1日目</div>
+            <div class="bonus-gift-box">🎁</div>
+            <br>
+            <div class="bonus-reward-text">🪙 +150 コイン 獲得！</div>
+            <br>
+            <button id="bonus-claim-btn" class="bonus-close-btn">受け取る</button>
+        </div>
+    </div>
+
+    <div id="home-screen" class="screen">
+        <div id="level-panel">
+            <div id="home-username-display">プレイヤー: ---</div>
+            <div id="home-lv-num">Lv.1</div>
+            <div id="xp-bar">
+                <div id="xp-fill-home"></div>
+            </div>
+            <div id="home-status-bottom">
+                <div id="home-xp-text">0 / 50 XP</div>
+                <div id="home-coin-text">🪙 0</div>
+            </div>
+        </div>
+
+        <button id="setting-btn">⚙️</button>
+
+        <div id="egg-area" class="float-char-anim"></div>
+
+        <div id="right-menu-container">
+            <div id="diamond-menu">
+                <div class="diamond locked">
+                    <div class="diamond-content">ランキング<div class="lock-line">⛓️🔒⛓️</div></div>
+                </div>
+                <div class="diamond locked left">
+                    <div class="diamond-content">フレンド<div class="lock-line">⛓️🔒⛓️</div></div>
+                </div>
+                <div class="diamond locked right">
+                    <div class="diamond-content">マッチ<div class="lock-line">⛓️🔒⛓️</div></div>
+                </div>
+                <div class="diamond adventure">
+                    <div class="diamond-content">ストーリー<br>＆<br>冒険</div>
+                </div>
+            </div>
+
+            <div class="home-footer-menu">
+                <button id="home-gacha-btn" class="circle-menu-btn" data-label="ガチャ">📦</button>
+                <button class="circle-menu-btn dummy-btn" data-label="準備中">🔒</button>
+                <button class="circle-menu-btn dummy-btn" data-label="準備中">🔒</button>
+                <button class="circle-menu-btn dummy-btn" data-label="準備中">🔒</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="story-adventure-screen" class="screen">
+        <button id="home-btn">HOME</button>
+        <div class="choice-diamond story-choice locked">
+            <div class="diamond-content">ストーリー<div class="lock-line">⛓️🔒⛓️</div></div>
+        </div>
+        <div class="choice-diamond adventure-choice">
+            <div class="diamond-content">冒険</div>
+        </div>
+    </div>
+
+    <div id="game-screen" class="screen">
+        <button id="back-btn" class="nav-btn">← HOME</button>
+        <div id="life-container">❤️❤️❤️</div>
+        <div id="combo-display">🔥×0 COMBO!</div>
+        <div class="game-header">
+            <div class="game-header-top">
+                <div id="game-lv-num">Lv.1</div>
+                <div class="game-xp-bar-container"><div id="game-xp-fill"></div></div>
+            </div>
+            <div class="game-header-bottom">
+                <div id="game-xp-text">0/50</div>
+                <div id="game-coin-text-play" style="color: #ff9800;">🪙 0</div>
+                <div id="game-xp-popup-area"></div>
+            </div>
+        </div>
+        <div class="main-stage">
+            <div id="char-display" class="game-float-char-anim"></div>
+            <div id="q-display">準備中...</div>
+        </div>
+        <div class="ui-bottom">
+            <input id="ans-input" type="text" placeholder="答えを入力...">
+            <div>
+                <button id="check-btn" class="btn">決定！</button>
+                <button id="next-btn" class="btn">次へ進む ＞</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="gacha-screen" class="screen">
+        <button id="gacha-back-btn" class="nav-btn">← HOME</button>
+        <div class="gacha-container">
+            <div class="gacha-screen-title">✨ 宝箱ガチャ ✨</div>
+            <div id="gacha-screen-coin-text" class="gacha-coin-status">所持コイン: 🪙 0</div>
+            <div id="gacha-main-box">📦</div>
+            
+            <button id="gacha-draw-action-btn" class="gacha-draw-action-btn">1回引く (🪙50)</button>
+
+            <div id="gacha-choice-container">
+                <button id="gacha-convert-btn" class="gacha-choice-btn">コインに変換する</button>
+                <button id="gacha-keep-btn" class="gacha-choice-btn">所持する</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /* ==========================================================================
+           JSメインロジック
+           ========================================================================== */
+        // 画面切り替えは screenNav.js が担当。
+        // ここでは「その画面に入った」イベントを受けて
+        // 必要な後処理(表示更新など)だけを行う。
+        window.addEventListener("hatchoria:enterHome", () => {
+            updateDisplay();
+        });
+
+        window.addEventListener("hatchoria:enterGacha", () => {
+            resetGachaState();
+            updateDisplay();
+        });
+
+        // ⚙️ 設定画面連動の変数群
+        const settingBtn = document.getElementById("setting-btn");
+        const settingMenuOverlay = document.getElementById("setting-menu-overlay");
+        const settingMenuCloseBtn = document.getElementById("setting-menu-close-btn");
+        const menuProfileBtn = document.getElementById("menu-profile-btn");
+        const menuResetBtn = document.getElementById("menu-reset-btn");
+        const profileOverlay = document.getElementById("profile-overlay");
+        const profileCloseBtn = document.getElementById("profile-close-btn");
+        const profileCopyBtn = document.getElementById("profile-copy-btn");
+
+        // ⚙️ 設定ボタンクリックでメニュー展開
+        settingBtn.addEventListener("click", () => {
+            settingMenuOverlay.classList.add("show");
+        });
+        settingMenuCloseBtn.addEventListener("click", () => {
+            settingMenuOverlay.classList.remove("show");
+        });
+
+        // 👤 プロフィール確認ボタンクリック時
+        menuProfileBtn.addEventListener("click", () => {
+            settingMenuOverlay.classList.remove("show");
+            
+            // プロフィール画面へ文字をセット
+            document.getElementById("profile-name-display").innerText = username;
+            document.getElementById("profile-code-display").innerText = usercode;
+            
+            // コピーボタンの表示リセット
+            profileCopyBtn.innerText = "コピー";
+            profileCopyBtn.classList.remove("copied");
+
+            profileOverlay.classList.add("show");
+        });
+        profileCloseBtn.addEventListener("click", () => {
+            profileOverlay.classList.remove("show");
+        });
+
+        // 📋 クリップボードにユーザーコードをコピーする機能
+        profileCopyBtn.addEventListener("click", () => {
+            navigator.clipboard.writeText(usercode).then(() => {
+                profileCopyBtn.innerText = "コピー完了！";
+                profileCopyBtn.classList.add("copied");
+                setTimeout(() => {
+                    profileCopyBtn.innerText = "コピー";
+                    profileCopyBtn.classList.remove("copied");
+                }, 2000);
+            }).catch(err => {
+                alert("コピーに失敗しました。お使いのブラウザを手動で選択してください。");
+            });
+        });
+
+        // 🚨 リセットボタン処理
+        menuResetBtn.addEventListener("click", () => {
+            if(confirm("本当に最初からやり直しますか？\n（すべてのアカウントデータ、レベル、コイン、アイテムが削除されます）")) {
+                localStorage.removeItem("egg_game_last_login");
+                localStorage.removeItem("egg_game_save");
+                location.reload();
+            }
+        });
+
+        // 画面切り替えのクリック処理はすべて screenNav.js に移行済み
+
+        const eggImage = "assets/images/leaf_1.png";
+
+        // 単語出題・クイズ判定は game.js が担当するため、
+        // ここには quizData は置かない
+
+        const rewards = [
+            { name: "賢者の石 🪨", icon: "🪨", rarity: "ULTRA", cssClass: "item-ultra", tagClass: "tag-ultra" },
+            { name: "聖なる遺体 💀", icon: "💀", rarity: "LEGENDARY", cssClass: "item-legendary", tagClass: "tag-legendary" },
+            { name: "神秘の果実 🍋", icon: "🍋", rarity: "RARE", cssClass: "item-rare", tagClass: "tag-rare" },
+            { name: "道化師の仮面 🎭", icon: "🎭", rarity: "COMMON", cssClass: "item-common", tagClass: "tag-common" }
+        ];
+
+        let username = ""; let usercode = "";
+        let loginStreak = 1; 
+
+        // レベル・XP・コインは game.js が読み込む Firestore のプレイヤー
+        // データ(window.HatchoriaPlayer)を直接参照する。
+        // ここではローカルの lv/xp/goal/coins は持たない。
+
+        let inventory = []; 
+        let currentGachaReward = null; 
+
+        function generateUserCode() {
+            const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+            let result = "";
+            for (let i = 0; i < 10; i++) {
+                result += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            return result;
+        }
+
+        function saveGameData() {
+            const dataToSave = {
+                username: username, 
+                usercode: usercode, 
+                loginStreak: loginStreak,
+                inventory: inventory,
+                lastLoginDate: localStorage.getItem("egg_game_last_login") 
+            };
+            localStorage.setItem("egg_game_save", JSON.stringify(dataToSave));
+        }
+
+        function loadGameData() {
+            const savedData = localStorage.getItem("egg_game_save");
+            if (savedData) {
+                try {
+                    const parsed = JSON.parse(savedData);
+                    if (parsed.username !== undefined) username = parsed.username;
+                    if (parsed.usercode !== undefined) usercode = parsed.usercode;
+                    if (parsed.loginStreak !== undefined) loginStreak = parsed.loginStreak;
+                    if (parsed.inventory !== undefined) inventory = parsed.inventory;
+                } catch(e) { console.error(e); }
+            }
+
+            if (!username) {
+                document.getElementById("account-creation-overlay").classList.add("show");
+            }
+        }
+
+        document.getElementById("account-submit-btn").addEventListener("click", () => {
+            const inputName = document.getElementById("account-name-input").value.trim();
+            if (!inputName) {
+                alert("アカウント名を入力してください！");
+                return;
+            }
+            username = inputName;
+            usercode = generateUserCode(); 
+            
+            document.getElementById("account-creation-overlay").classList.remove("show");
+            saveGameData();
+            updateDisplay();
+            checkLoginBonus(); 
+        });
+
+        function checkLoginBonus() {
+            if (!username) return;
+
+            const todayStr = new Date().toLocaleDateString(); 
+            const lastLoginStr = localStorage.getItem("egg_game_last_login");
+
+            if (!lastLoginStr || lastLoginStr !== todayStr) {
+                if (lastLoginStr) {
+                    const todayTime = new Date(todayStr).getTime();
+                    const lastLoginTime = new Date(lastLoginStr).getTime();
+                    const diffDays = Math.floor((todayTime - lastLoginTime) / (1000 * 60 * 60 * 24));
+                    if (diffDays === 1) loginStreak++;
+                    else if (diffDays > 1) loginStreak = 1;
+                } else { loginStreak = 1; }
+
+                document.getElementById("bonus-days-display").innerText = `${loginStreak}日目`;
+
+                setTimeout(() => {
+                    document.getElementById("login-bonus-overlay").classList.add("show");
+                    playFireworks(); 
+                }, 600);
+
+                document.getElementById("bonus-claim-btn").onclick = () => {
+                    if (window.HatchoriaPlayer) {
+                        window.HatchoriaPlayer.coins += 150;
+                        window.HatchoriaSave.save();
+                    }
+                    localStorage.setItem("egg_game_last_login", todayStr); 
+                    document.getElementById("login-bonus-overlay").classList.remove("show");
+                    saveGameData(); updateDisplay();
+                };
+            }
+        }
+
+        function resetGachaState() {
+            document.getElementById("gacha-main-box").innerHTML = "📦";
+            document.getElementById("gacha-draw-action-btn").style.display = "inline-block";
+            document.getElementById("gacha-choice-container").style.display = "none";
+            currentGachaReward = null;
+        }
+
+        document.getElementById("gacha-draw-action-btn").addEventListener("click", () => {
+            if (!window.HatchoriaPlayer) return;
+            if (window.HatchoriaPlayer.coins < 50) {
+                alert("🪙 コインが足りません！ (1回50コイン必要です)");
+                return;
+            }
+            window.HatchoriaPlayer.coins -= 50;
+            updateDisplay();
+            window.HatchoriaSave.save();
+
+            document.getElementById("gacha-draw-action-btn").style.display = "none";
+
+            const mainBox = document.getElementById("gacha-main-box");
+            mainBox.innerHTML = "🌀";
+            
+            setTimeout(() => {
+                const rand = Math.random() * 100;
+                if (rand < 10) {
+                    currentGachaReward = rewards[0]; 
+                } else if (rand < 25) {
+                    currentGachaReward = rewards[1]; 
+                } else if (rand < 55) {
+                    currentGachaReward = rewards[2]; 
+                } else {
+                    currentGachaReward = rewards[3]; 
+                }
+                
+                mainBox.innerHTML = `
+                    <div>
+                        <div class="rarity-tag ${currentGachaReward.tagClass}">${currentGachaReward.rarity}</div>
+                        <div style="font-size: 60px; margin-bottom: 5px;">${currentGachaReward.icon}</div>
+                        <div class="nyanko-black-box">
+                            <div class="${currentGachaReward.cssClass}" style="font-size:22px; white-space:nowrap;">
+                                ${currentGachaReward.name}
+                            </div>
+                        </div>
+                    </div>
+                `;
+                playFireworks(); 
+
+                document.getElementById("gacha-choice-container").style.display = "flex";
+            }, 800);
+        });
+
+        document.getElementById("gacha-convert-btn").addEventListener("click", () => {
+            if (!currentGachaReward || !window.HatchoriaPlayer) return;
+            window.HatchoriaPlayer.coins += 10; 
+            const mainBox = document.getElementById("gacha-main-box");
+            mainBox.innerHTML = `
+                <div class="gacha-result-msg">
+                    🪙 コインに変換しました！<br>
+                    <span style="color:#ff9800; font-size:22px;">+10 コイン</span>
+                </div>
+            `;
+            document.getElementById("gacha-choice-container").style.display = "none";
+            setTimeout(resetGachaState, 2500);
+            updateDisplay();
+            window.HatchoriaSave.save();
+        });
+
+        document.getElementById("gacha-keep-btn").addEventListener("click", () => {
+            if (!currentGachaReward) return;
+            inventory.push(currentGachaReward.name); 
+            const mainBox = document.getElementById("gacha-main-box");
+            mainBox.innerHTML = `
+                <div class="gacha-result-msg" style="display:flex; flex-direction:column; align-items:center; justify-content:center;">
+                    <div class="nyanko-black-box">
+                        <span class="${currentGachaReward.cssClass}" style="font-size:22px;">
+                            ${currentGachaReward.name}
+                        </span>
+                    </div>
+                    <div>をゲットした！🎒</div>
+                </div>
+            `;
+            document.getElementById("gacha-choice-container").style.display = "none";
+            setTimeout(resetGachaState, 2500);
+            updateDisplay();
+            saveGameData();
+        });
+
+        // ホーム画面・ガチャ画面の表示更新のみを行う。
+        // レベル・XP・コインは game.js が読み込んだ Firestore の
+        // プレイヤーデータ(window.HatchoriaPlayer)をそのまま参照する。
+        // ゲーム画面(ライフ・コンボ等)の表示は game.js が管理する。
+        function updateDisplay(){
+            const p = window.HatchoriaPlayer;
+
+            document.getElementById("home-username-display").innerText = "プレイヤー: " + (username || "---");
+
+            if (!p) return; // プレイヤーデータの読み込みがまだ終わっていない
+
+            document.getElementById("home-lv-num").innerText = "Lv." + p.level;
+            document.getElementById("xp-fill-home").style.width = (p.exp / p.goal * 100) + "%";
+            document.getElementById("home-xp-text").innerText = `${p.exp} / ${p.goal} XP`;
+            document.getElementById("home-coin-text").innerText = "🪙 " + p.coins; 
+            document.getElementById("egg-area").innerHTML = `<img id="monsterImage" src="${eggImage}" alt="egg">`;
+
+            document.getElementById("gacha-screen-coin-text").innerText = "所持コイン: 🪙 " + p.coins;
+        }
+
+        function playFireworks(){ 
+            const layer = document.getElementById("firework-layer"); 
+            const colors = ["#ff5252", "#ffd700", "#00e5ff", "#e040fb", "#ffffff", "#ff9800"]; 
+            for(let w=0; w<3; w++){ 
+                setTimeout(() => { 
+                    const x = [50, 25, 75][w]; 
+                    const y = [40, 30, 35][w]; 
+                    for(let i=0; i<55; i++){ 
+                        const p = document.createElement("div"); 
+                        const size = Math.random()*6 + 4; 
+                        p.style.position = "absolute"; 
+                        p.style.width = size + "px"; 
+                        p.style.height = size + "px"; 
+                        p.style.borderRadius = "50%"; 
+                        p.style.left = x + "%"; 
+                        p.style.top = y + "%"; 
+                        p.style.background = colors[Math.floor(Math.random()*colors.length)]; 
+                        layer.appendChild(p); 
+                        
+                        const angle = Math.random() * Math.PI * 2; 
+                        const dist = Math.random()*500 + 120; 
+                        
+                        const anim = p.animate([ 
+                            { transform: "translate(0,0) scale(1.4)", opacity: 1 }, 
+                            { transform: `translate(${Math.cos(angle)*dist}px, ${Math.sin(angle)*dist}px) scale(0)`, opacity: 0 } 
+                        ],{ 
+                            duration: 2400 + Math.random()*800, 
+                            easing: "cubic-bezier(0.1,0.5,0.3,1)",
+                            fill: "forwards"
+                        }); 
+
+                        anim.onfinish = () => { p.remove(); };
+                    } 
+                }, w*600); 
+            } 
+        }
+
+        // ゲーム画面(クイズ)のボタン・キー操作は game.js が管理する
+
+        // game.js がFirestoreからプレイヤーデータを読み込み終えたら
+        // ホーム画面の表示(レベル・XP・コイン)を更新する
+        window.addEventListener("hatchoria:playerReady", () => {
+            updateDisplay();
+        });
+
+        window.onload = () => { loadGameData(); updateDisplay(); checkLoginBonus(); };
+    </script>
+    <script type="module" src="screenNav.js"></script>
+    <script type="module" src="game.js"></script>
+    <script type="module" src="home.js"></script>
+</body>
+</html>
