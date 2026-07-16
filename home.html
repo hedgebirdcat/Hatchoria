@@ -854,6 +854,69 @@
             opacity: 1;
             pointer-events: auto;
         }
+
+        #clear-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 9000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            background: rgba(0, 0, 0, 0.55);
+            opacity: 0;
+            transition: opacity 0.6s ease-out;
+        }
+        #clear-overlay.show {
+            opacity: 1;
+        }
+        #clear-frame {
+            width: 82%;
+            max-width: 480px;
+            padding: 30px 20px;
+            border: 6px double #ffd54f;
+            border-radius: 18px;
+            background: linear-gradient(180deg, #fffdf5, #fff3d0);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+            text-align: center;
+            transform: scale(0.85);
+            transition: transform 0.5s ease-out;
+        }
+        #clear-overlay.show #clear-frame {
+            transform: scale(1);
+        }
+        #clear-title {
+            font-size: 46px;
+            font-weight: 900;
+            letter-spacing: 6px;
+            color: #ff9800;
+            text-shadow: 0 3px 0 rgba(0,0,0,0.1);
+        }
+        #clear-stats {
+            margin-top: 14px;
+            font-size: 18px;
+            font-weight: 700;
+            color: #555;
+            line-height: 1.8;
+        }
+        #clear-home-btn {
+            margin-top: 26px;
+            padding: 16px 60px;
+            font-size: 22px;
+            font-weight: 900;
+            color: #333;
+            background: white;
+            border: none;
+            border-radius: 999px;
+            box-shadow: 0 6px 16px rgba(0,0,0,0.3);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.6s ease-in;
+        }
+        #clear-overlay.show #clear-home-btn {
+            opacity: 1;
+            pointer-events: auto;
+        }
         @keyframes levelGlow { 0% { transform: translateY(100%); opacity: 0; } 100% { transform: translateY(-20%); opacity: 1; } }
         .sparkle { position: absolute; width: 12px; height: 12px; border-radius: 50%; background: white; box-shadow: 0 0 10px white; animation: sparkleMove 2s linear forwards; }
         @keyframes sparkleMove { 0% { transform: translateY(0) scale(0.5); opacity: 0; } 20% { opacity: 1; } 100% { transform: translateY(-120vh) scale(1.5); opacity: 0; } }
@@ -1028,6 +1091,17 @@
         <div id="gameover-overlay">
             <div id="gameover-text">GAME OVER</div>
             <button id="gameover-home-btn">ホームに戻る</button>
+        </div>
+        <div id="clear-overlay">
+            <div id="clear-frame">
+                <div id="clear-title">CLEAR</div>
+                <div id="clear-stats">
+                    <div id="clear-correct">正解数：0/10</div>
+                    <div id="clear-xp">獲得XP：0xp</div>
+                    <div id="clear-coins">獲得コイン：0コイン</div>
+                </div>
+            </div>
+            <button id="clear-home-btn">ホームに戻る</button>
         </div>
     </div>
 
