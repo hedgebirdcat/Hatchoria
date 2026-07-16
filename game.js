@@ -176,6 +176,11 @@ window.addEventListener("DOMContentLoaded", () => {
             player.monsterLevel = player.level;
         }
 
+        // ガチャで獲得したアイテム一覧が未設定の場合は空配列にしておく
+        if (!player.inventory) {
+            player.inventory = [];
+        }
+
         console.log("プレイヤーデータ取得成功");
 
         // home.html側の(まだFirebase化されていない)スクリプトが
