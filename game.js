@@ -37,7 +37,7 @@ const BONUS_XP = 40;            // ボーナスステージ正解時の追加XP
 const BASE_XP = 10;             // 通常正解のXP
 const COMBO_BONUS_STEP = 5;     // このコンボ数ごとにXPボーナスが増える
 const COMBO_BONUS_XP = 5;       // コンボボーナスの増加量
-const LEVELUP_COIN_REWARD = 50; // レベルアップ時のコイン報酬
+const LEVELUP_COIN_REWARD = 10; // レベルアップ時のコイン報酬
 const DEFAULT_GOAL = 50;        // 初期の必要XP(Firestoreに未設定の場合)
 const DEFAULT_MONSTER = "leaf"; // モンスター種類が未設定の場合のデフォルト
 
@@ -165,6 +165,15 @@ window.addEventListener("DOMContentLoaded", () => {
         }
 
         console.log("プレイヤーデータ取得成功");
+
+        // home.html側の(まだFirebase化されていない)スクリプトが
+        // コイン・レベル等を同じデータとして参照・保存できるように、
+        // プレイヤーデータと保存関数を window 経由で公開する。
+        // これにより「ゲーム画面のコイン」と「ホーム画面のコイン」が
+        // 常に同じ数字になる(同じオブジェクトを見ているだけなので)。
+        window.HatchoriaPlayer = player;
+        window.HatchoriaSave = { save: saveGame };
+        window.dispatchEvent(new Event("hatchoria:playerReady"));
 
         initializeGame();
 
