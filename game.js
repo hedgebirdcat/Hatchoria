@@ -189,6 +189,7 @@ window.addEventListener("DOMContentLoaded", () => {
         els.gameoverHomeBtn.addEventListener("click", () => {
 
             els.gameoverOverlay.classList.remove("show", "show-text");
+            els.gameoverOverlay.style.display = "none";
             window.dispatchEvent(new Event("hatchoria:requestHome"));
 
         });
@@ -231,6 +232,7 @@ function initializeGame() {
     questionsAnswered = 0;
 
     els.gameoverOverlay.classList.remove("show", "show-text");
+    els.gameoverOverlay.style.display = "none";
 
     nextQuestion();
     updateDisplay();
@@ -399,6 +401,15 @@ function handleGameOver() {
 
     // 画面が2秒かけて黒くフェードし、
     // 完全に暗くなってから GAME OVER の文字とホームボタンを出す
+    //
+    // display:none → flex と opacity:0 → 1 を同時に行うと
+    // ブラウザがアニメーションの開始地点を認識できず、
+    // 一瞬で真っ黒になってしまう。
+    // そのため、まず表示だけ(透明のまま)行い、
+    // 強制的に再描画させてから opacity を変化させることで
+    // きちんと2秒かけてフェードするようにしている。
+    els.gameoverOverlay.style.display = "flex";
+    void els.gameoverOverlay.offsetWidth;
     els.gameoverOverlay.classList.add("show");
 
     setTimeout(() => {
