@@ -64,6 +64,8 @@ let combo = 0;
 let life = MAX_LIFE;
 let correctAnswersCount = 0;
 let questionsAnswered = 0;
+let roundXPEarned = 0;
+let roundCoinsEarned = 0;
 let isBonusStage = false;
 let isWaiting = false;
 
@@ -93,7 +95,12 @@ function cacheElements() {
         bonusStartLogo: document.getElementById("bonus-start-logo"),
         questionCounter: document.getElementById("question-counter"),
         gameoverOverlay: document.getElementById("gameover-overlay"),
-        gameoverHomeBtn: document.getElementById("gameover-home-btn")
+        gameoverHomeBtn: document.getElementById("gameover-home-btn"),
+        clearOverlay: document.getElementById("clear-overlay"),
+        clearCorrect: document.getElementById("clear-correct"),
+        clearXp: document.getElementById("clear-xp"),
+        clearCoins: document.getElementById("clear-coins"),
+        clearHomeBtn: document.getElementById("clear-home-btn")
     };
 
 }
@@ -194,6 +201,14 @@ window.addEventListener("DOMContentLoaded", () => {
 
         });
 
+        els.clearHomeBtn.addEventListener("click", () => {
+
+            els.clearOverlay.classList.remove("show");
+            els.clearOverlay.style.display = "none";
+            window.dispatchEvent(new Event("hatchoria:requestHome"));
+
+        });
+
         window.addEventListener("keydown", (e) => {
 
             if (e.key !== "Enter") return;
@@ -230,9 +245,13 @@ function initializeGame() {
     combo = 0;
     correctAnswersCount = 0;
     questionsAnswered = 0;
+    roundXPEarned = 0;
+    roundCoinsEarned = 0;
 
     els.gameoverOverlay.classList.remove("show", "show-text");
     els.gameoverOverlay.style.display = "none";
+    els.clearOverlay.classList.remove("show");
+    els.clearOverlay.style.display = "none";
 
     nextQuestion();
     updateDisplay();
@@ -354,6 +373,7 @@ function handleCorrect() {
     }
 
     player.exp += gainedXP;
+    roundXPEarned += gainedXP;
 
     showXpPopup(popupText, isSpecialPopup);
 
@@ -364,6 +384,7 @@ function handleCorrect() {
         player.level++;
         player.goal += 10;
         player.coins += LEVELUP_COIN_REWARD;
+        roundCoinsEarned += LEVELUP_COIN_REWARD;
 
     }
 
@@ -426,15 +447,18 @@ function handleGameOver() {
 
 function finishRound() {
 
-    els.qDisplay.innerText = "クリア！おつかれさま";
     els.checkBtn.style.display = "none";
     els.nextBtn.style.display = "none";
 
-    setTimeout(() => {
+    els.clearCorrect.innerText = `正解数：${correctAnswersCount}/${QUESTIONS_PER_ROUND}`;
+    els.clearXp.innerText = `獲得XP：${roundXPEarned}xp`;
+    els.clearCoins.innerText = `獲得コイン：${roundCoinsEarned}コイン`;
 
-        window.dispatchEvent(new Event("hatchoria:requestHome"));
-
-    }, 1500);
+    // display:none → 表示 の間に強制再描画を挟むことで
+    // フェード・拡大のトランジションがきちんと効くようにする
+    els.clearOverlay.style.display = "flex";
+    void els.clearOverlay.offsetWidth;
+    els.clearOverlay.classList.add("show");
 
 }
 
