@@ -39,6 +39,18 @@ const COMBO_BONUS_STEP = 5;     // このコンボ数ごとにXPボーナスが�
 const COMBO_BONUS_XP = 5;       // コンボボーナスの増加量
 const LEVELUP_COIN_REWARD = 50; // レベルアップ時のコイン報酬
 const DEFAULT_GOAL = 50;        // 初期の必要XP(Firestoreに未設定の場合)
+const DEFAULT_MONSTER = "leaf"; // モンスター種類が未設定の場合のデフォルト
+
+// レベルに応じた進化段階(home.jsのupdateMonster()と同じ基準)
+function getMonsterStage(level) {
+
+    if (level >= 70) return 5;
+    if (level >= 40) return 4;
+    if (level >= 20) return 3;
+    if (level >= 10) return 2;
+    return 1;
+
+}
 
 // ======================================
 // ゲーム状態(このセッションのみ・保存対象外)
@@ -139,6 +151,17 @@ window.addEventListener("DOMContentLoaded", () => {
         // 必要XP(goal)が未設定の場合は初期値を補う
         if (!player.goal) {
             player.goal = DEFAULT_GOAL;
+        }
+
+        // モンスターの種類が未設定の場合は初期値を補う
+        if (!player.monster) {
+            player.monster = DEFAULT_MONSTER;
+        }
+
+        // monsterLevelが未設定の場合はlevelに合わせておく
+        // (Firestoreへのupdateはundefinedの値があるとエラーになるため)
+        if (!player.monsterLevel) {
+            player.monsterLevel = player.level;
         }
 
         console.log("プレイヤーデータ取得成功");
@@ -373,6 +396,10 @@ function updateDisplay() {
     els.xpFill.style.width = (player.exp / player.goal * 100) + "%";
     els.xpText.innerText = `${player.exp}/${player.goal}`;
     els.coinText.innerText = "🪙 " + player.coins;
+
+    const stage = getMonsterStage(player.level);
+    els.charDisplay.innerHTML =
+        `<img src="assets/images/${player.monster}_${stage}.png" alt="character">`;
 
 }
 
