@@ -1132,93 +1132,23 @@
             updateDisplay();
         });
 
-        // ⚙️ 設定画面連動の変数群
-        const settingBtn = document.getElementById("setting-btn");
-        const settingMenuOverlay = document.getElementById("setting-menu-overlay");
-        const settingMenuCloseBtn = document.getElementById("setting-menu-close-btn");
-        const menuProfileBtn = document.getElementById("menu-profile-btn");
-        const menuResetBtn = document.getElementById("menu-reset-btn");
-        const profileOverlay = document.getElementById("profile-overlay");
-        const profileCloseBtn = document.getElementById("profile-close-btn");
-        const profileCopyBtn = document.getElementById("profile-copy-btn");
-
-        // ⚙️ 設定ボタンクリックでメニュー展開
-        settingBtn.addEventListener("click", () => {
-            settingMenuOverlay.classList.add("show");
-        });
-        settingMenuCloseBtn.addEventListener("click", () => {
-            settingMenuOverlay.classList.remove("show");
-        });
-
-        // 👤 プロフィール確認ボタンクリック時
-        menuProfileBtn.addEventListener("click", () => {
-            settingMenuOverlay.classList.remove("show");
-            
-            // プロフィール画面へ文字をセット
-            document.getElementById("profile-name-display").innerText = username;
-            document.getElementById("profile-code-display").innerText = usercode;
-            
-            // コピーボタンの表示リセット
-            profileCopyBtn.innerText = "コピー";
-            profileCopyBtn.classList.remove("copied");
-
-            profileOverlay.classList.add("show");
-        });
-        profileCloseBtn.addEventListener("click", () => {
-            profileOverlay.classList.remove("show");
-        });
-
-        // 📋 クリップボードにユーザーコードをコピーする機能
-        profileCopyBtn.addEventListener("click", () => {
-            navigator.clipboard.writeText(usercode).then(() => {
-                profileCopyBtn.innerText = "コピー完了！";
-                profileCopyBtn.classList.add("copied");
-                setTimeout(() => {
-                    profileCopyBtn.innerText = "コピー";
-                    profileCopyBtn.classList.remove("copied");
-                }, 2000);
-            }).catch(err => {
-                alert("コピーに失敗しました。お使いのブラウザを手動で選択してください。");
-            });
-        });
-
-        // 🚨 リセットボタン処理
-        menuResetBtn.addEventListener("click", () => {
-            if(confirm("本当に最初からやり直しますか？\n（すべてのアカウントデータ、レベル、コイン、アイテムが削除されます）")) {
-                localStorage.removeItem("egg_game_last_login");
-                localStorage.removeItem("egg_game_save");
-                location.reload();
-            }
-        });
-
-        // 画面切り替えのクリック処理はすべて screenNav.js に移行済み
+        // プロフィール・設定・アカウント作成は profile.js に分離済み
 
         const eggImage = "assets/images/leaf_1.png";
 
         // 単語出題・クイズ判定は game.js が担当するため、
         // ここには quizData は置かない
 
-        let username = ""; let usercode = "";
         let loginStreak = 1; 
 
         // レベル・XP・コインは game.js が読み込む Firestore のプレイヤー
         // データ(window.HatchoriaPlayer)を直接参照する。
         // ここではローカルの lv/xp/goal/coins は持たない。
         // ガチャ機能(rewards・inventory等)は gacha.js に分離済み。
-
-        function generateUserCode() {
-            const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-            let result = "";
-            for (let i = 0; i < 10; i++) {
-                result += chars.charAt(Math.floor(Math.random() * chars.length));
-            }
-            return result;
-        }
+        // アカウント名・フレンドコード・設定メニューは profile.js に分離済み。
 
         function saveGameData() {
             const dataToSave = {
-                username: username, 
-                usercode: usercode, 
                 loginStreak: loginStreak,
                 lastLoginDate: localStorage.getItem("egg_game_last_login") 
             };
@@ -1230,34 +1160,13 @@
             if (savedData) {
                 try {
                     const parsed = JSON.parse(savedData);
-                    if (parsed.username !== undefined) username = parsed.username;
-                    if (parsed.usercode !== undefined) usercode = parsed.usercode;
                     if (parsed.loginStreak !== undefined) loginStreak = parsed.loginStreak;
                 } catch(e) { console.error(e); }
             }
-
-            if (!username) {
-                document.getElementById("account-creation-overlay").classList.add("show");
-            }
         }
 
-        document.getElementById("account-submit-btn").addEventListener("click", () => {
-            const inputName = document.getElementById("account-name-input").value.trim();
-            if (!inputName) {
-                alert("アカウント名を入力してください！");
-                return;
-            }
-            username = inputName;
-            usercode = generateUserCode(); 
-            
-            document.getElementById("account-creation-overlay").classList.remove("show");
-            saveGameData();
-            updateDisplay();
-            checkLoginBonus(); 
-        });
-
         function checkLoginBonus() {
-            if (!username) return;
+            if (!window.HatchoriaPlayer || !window.HatchoriaPlayer.friendCode) return;
 
             const todayStr = new Date().toLocaleDateString(); 
             const lastLoginStr = localStorage.getItem("egg_game_last_login");
@@ -1300,7 +1209,8 @@
         function updateDisplay(){
             const p = window.HatchoriaPlayer;
 
-            document.getElementById("home-username-display").innerText = "プレイヤー: " + (username || "---");
+            document.getElementById("home-username-display").innerText =
+                "プレイヤー: " + (p && p.accountName ? p.accountName : "---");
 
             if (!p) return; // プレイヤーデータの読み込みがまだ終わっていない
 
@@ -1354,16 +1264,19 @@
         // ゲーム画面(クイズ)のボタン・キー操作は game.js が管理する
 
         // game.js がFirestoreからプレイヤーデータを読み込み終えたら
-        // ホーム画面の表示(レベル・XP・コイン)を更新する
+        // ホーム画面の表示(レベル・XP・コイン)を更新し、
+        // ログインボーナスも確認する
         window.addEventListener("hatchoria:playerReady", () => {
             updateDisplay();
+            checkLoginBonus();
         });
 
-        window.onload = () => { loadGameData(); updateDisplay(); checkLoginBonus(); };
+        window.onload = () => { loadGameData(); updateDisplay(); };
     </script>
     <script type="module" src="screenNav.js"></script>
     <script type="module" src="game.js"></script>
     <script type="module" src="gacha.js"></script>
+    <script type="module" src="profile.js"></script>
     <script type="module" src="home.js"></script>
 </body>
 </html>
