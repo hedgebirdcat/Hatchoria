@@ -1134,7 +1134,18 @@
 
         // プロフィール・設定・アカウント作成は profile.js に分離済み
 
-        const eggImage = "assets/images/leaf_1.png";
+        // レベルに応じた進化段階(game.jsのgetMonsterStage()と同じ基準)
+        function getMonsterImage(player) {
+            let stage = 1;
+            const level = player.level;
+            if (level >= 70) stage = 5;
+            else if (level >= 40) stage = 4;
+            else if (level >= 20) stage = 3;
+            else if (level >= 10) stage = 2;
+
+            const monster = player.monster || "leaf";
+            return `assets/images/${monster}_${stage}.png`;
+        }
 
         // 単語出題・クイズ判定は game.js が担当するため、
         // ここには quizData は置かない
@@ -1218,7 +1229,7 @@
             document.getElementById("xp-fill-home").style.width = (p.exp / p.goal * 100) + "%";
             document.getElementById("home-xp-text").innerText = `${p.exp} / ${p.goal} XP`;
             document.getElementById("home-coin-text").innerText = "🪙 " + p.coins; 
-            document.getElementById("egg-area").innerHTML = `<img id="monsterImage" src="${eggImage}" alt="egg">`;
+            document.getElementById("egg-area").innerHTML = `<img id="monsterImage" src="${getMonsterImage(p)}" alt="monster">`;
         }
 
         function playFireworks(){ 
