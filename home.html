@@ -952,6 +952,56 @@
             opacity: 1;
             pointer-events: auto;
         }
+
+        #combo-continue-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 9600;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.35);
+        }
+        #combo-continue-overlay.show {
+            display: flex;
+        }
+        #combo-continue-box {
+            width: 82%;
+            max-width: 460px;
+            padding: 30px 24px;
+            background: #1a1a1a;
+            border-radius: 22px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        #combo-continue-text {
+            color: white;
+            font-size: 20px;
+            font-weight: 900;
+            line-height: 1.5;
+        }
+        #combo-continue-buttons {
+            margin-top: 22px;
+            display: flex;
+            justify-content: center;
+            gap: 18px;
+        }
+        #combo-continue-yes, #combo-continue-no {
+            padding: 12px 36px;
+            font-size: 18px;
+            font-weight: 900;
+            border: none;
+            border-radius: 999px;
+            cursor: pointer;
+        }
+        #combo-continue-yes {
+            background: #ffd54f;
+            color: #333;
+        }
+        #combo-continue-no {
+            background: #555;
+            color: white;
+        }
         @keyframes levelGlow { 0% { transform: translateY(100%); opacity: 0; } 100% { transform: translateY(-20%); opacity: 1; } }
         .sparkle { position: absolute; width: 12px; height: 12px; border-radius: 50%; background: white; box-shadow: 0 0 10px white; animation: sparkleMove 2s linear forwards; }
         @keyframes sparkleMove { 0% { transform: translateY(0) scale(0.5); opacity: 0; } 20% { opacity: 1; } 100% { transform: translateY(-120vh) scale(1.5); opacity: 0; } }
@@ -1142,6 +1192,15 @@
                 </div>
             </div>
             <button id="clear-home-btn">ホームに戻る</button>
+        </div>
+        <div id="combo-continue-overlay">
+            <div id="combo-continue-box">
+                <div id="combo-continue-text">COMBOを継続させますか？</div>
+                <div id="combo-continue-buttons">
+                    <button id="combo-continue-yes">はい</button>
+                    <button id="combo-continue-no">いいえ</button>
+                </div>
+            </div>
         </div>
     </div>
 
