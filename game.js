@@ -66,6 +66,7 @@ let correctAnswersCount = 0;
 let questionsAnswered = 0;
 let roundXPEarned = 0;
 let roundCoinsEarned = 0;
+let previousCombo = 0; // 前回ラウンド終了時点のコンボ数(継続確認用)
 let isBonusStage = false;
 let isWaiting = false;
 
@@ -100,7 +101,10 @@ function cacheElements() {
         clearCorrect: document.getElementById("clear-correct"),
         clearXp: document.getElementById("clear-xp"),
         clearCoins: document.getElementById("clear-coins"),
-        clearHomeBtn: document.getElementById("clear-home-btn")
+        clearHomeBtn: document.getElementById("clear-home-btn"),
+        comboContinueOverlay: document.getElementById("combo-continue-overlay"),
+        comboContinueYes: document.getElementById("combo-continue-yes"),
+        comboContinueNo: document.getElementById("combo-continue-no")
     };
 
 }
@@ -196,7 +200,9 @@ window.addEventListener("DOMContentLoaded", () => {
 
         hideLoadingOverlay();
 
-        initializeGame();
+        // ここでは initializeGame() を呼ばない。
+        // (呼ぶとホーム画面にいる間にもボーナス抽選が走ってしまうため。
+        //  実際にゲーム画面に入った時だけ hatchoria:enterGame で開始する)
 
         // イベント登録
         els.checkBtn.addEventListener("click", handleCheck);
@@ -215,6 +221,21 @@ window.addEventListener("DOMContentLoaded", () => {
             els.clearOverlay.classList.remove("show");
             els.clearOverlay.style.display = "none";
             window.dispatchEvent(new Event("hatchoria:requestHome"));
+
+        });
+
+        els.comboContinueYes.addEventListener("click", () => {
+
+            els.comboContinueOverlay.classList.remove("show");
+            initializeGame({ keepCombo: true });
+
+        });
+
+        els.comboContinueNo.addEventListener("click", () => {
+
+            els.comboContinueOverlay.classList.remove("show");
+            previousCombo = 0;
+            initializeGame({ keepCombo: false });
 
         });
 
@@ -240,6 +261,14 @@ window.addEventListener("hatchoria:enterGame", () => {
 
     if (!hasInitialized || !player) return;
 
+    // 前回コンボが残っていれば、継続するか確認するダイアログを出す
+    if (previousCombo > 0) {
+
+        els.comboContinueOverlay.classList.add("show");
+        return;
+
+    }
+
     initializeGame();
 
 });
@@ -248,14 +277,15 @@ window.addEventListener("hatchoria:enterGame", () => {
 // 初期設定
 // ======================================
 
-function initializeGame() {
+function initializeGame(options = {}) {
 
     life = MAX_LIFE;
-    combo = 0;
+    combo = options.keepCombo ? previousCombo : 0;
     correctAnswersCount = 0;
     questionsAnswered = 0;
     roundXPEarned = 0;
     roundCoinsEarned = 0;
+    previousCombo = 0;
 
     els.gameoverOverlay.classList.remove("show", "show-text");
     els.gameoverOverlay.style.display = "none";
@@ -455,6 +485,8 @@ function handleGameOver() {
 // ======================================
 
 function finishRound() {
+
+    previousCombo = combo;
 
     els.checkBtn.style.display = "none";
     els.nextBtn.style.display = "none";
