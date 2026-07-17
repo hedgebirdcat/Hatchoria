@@ -9,8 +9,7 @@ import { auth } from "./firebase.js";
 import {
     signInWithEmailAndPassword,
     setPersistence,
-    browserLocalPersistence,
-    browserSessionPersistence
+    browserLocalPersistence
 } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
 
 
@@ -18,7 +17,6 @@ import {
 const loginForm = document.getElementById("loginForm");
 const email = document.getElementById("email");
 const password = document.getElementById("password");
-const remember = document.getElementById("remember");
 const message = document.getElementById("message");
 
 
@@ -29,16 +27,8 @@ loginForm.addEventListener("submit", async (e) => {
 
     try {
 
-        // 自動ログイン
-        if (remember.checked) {
-
-            await setPersistence(auth, browserLocalPersistence);
-
-        } else {
-
-            await setPersistence(auth, browserSessionPersistence);
-
-        }
+        // 常に自動ログイン(次回サイトを開いてもログイン状態を保つ)
+        await setPersistence(auth, browserLocalPersistence);
 
         // Firebaseログイン
         await signInWithEmailAndPassword(
