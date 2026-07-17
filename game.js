@@ -139,6 +139,7 @@ window.addEventListener("DOMContentLoaded", () => {
 
             if (hasInitialized) {
                 // ゲーム中にログアウトされた場合のみ遷移
+                hideLoadingOverlay();
                 window.location.href = "index.html";
             }
 
@@ -155,6 +156,7 @@ window.addEventListener("DOMContentLoaded", () => {
         if (!player) {
 
             console.log("プレイヤーデータ取得失敗。ログイン画面に戻ります。");
+            hideLoadingOverlay();
             window.location.href = "index.html";
             return;
 
@@ -191,6 +193,8 @@ window.addEventListener("DOMContentLoaded", () => {
         window.HatchoriaPlayer = player;
         window.HatchoriaSave = { save: saveGame };
         window.dispatchEvent(new Event("hatchoria:playerReady"));
+
+        hideLoadingOverlay();
 
         initializeGame();
 
@@ -554,6 +558,24 @@ function updateQuestionCounter() {
 
     const remaining = QUESTIONS_PER_ROUND - questionsAnswered;
     els.questionCounter.innerText = `${remaining}/${QUESTIONS_PER_ROUND}`;
+
+}
+
+// ======================================
+// 起動時のローディング画面
+// ======================================
+
+function hideLoadingOverlay() {
+
+    const overlay = document.getElementById("app-loading-overlay");
+
+    if (!overlay) return;
+
+    overlay.classList.add("hide");
+
+    setTimeout(() => {
+        overlay.style.display = "none";
+    }, 500);
 
 }
 
