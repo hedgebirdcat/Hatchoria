@@ -1237,9 +1237,9 @@
         function getMonsterImage(player) {
             let stage = 1;
             const level = player.level;
-            if (level >= 70) stage = 5;
-            else if (level >= 40) stage = 4;
-            else if (level >= 20) stage = 3;
+            if (level >= 80) stage = 5;
+            else if (level >= 50) stage = 4;
+            else if (level >= 30) stage = 3;
             else if (level >= 10) stage = 2;
 
             const monster = player.monster || "leaf";
