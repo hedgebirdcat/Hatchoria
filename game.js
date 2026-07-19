@@ -35,7 +35,7 @@ const MAX_LIFE = 3;
 const BONUS_STAGE_RATE = 0.1;   // ボーナスステージの出現率
 const BONUS_XP = 40;            // ボーナスステージ正解時の追加XP
 const BASE_XP = 10;             // 通常正解のXP
-const COMBO_BONUS_STEP = 5;     // このコンボ数ごとにXPボーナスが増える
+const COMBO_BONUS_STEP = 10;    // このコンボ数ごとにXPボーナスが増える
 const COMBO_BONUS_XP = 5;       // コンボボーナスの増加量
 const LEVELUP_COIN_REWARD = 10; // レベルアップ時のコイン報酬
 const DEFAULT_GOAL = 50;        // 初期の必要XP(Firestoreに未設定の場合)
@@ -45,9 +45,9 @@ const QUESTIONS_PER_ROUND = 10; // 1ラウンドの出題数
 // レベルに応じた進化段階(home.jsのupdateMonster()と同じ基準)
 function getMonsterStage(level) {
 
-    if (level >= 70) return 5;
-    if (level >= 40) return 4;
-    if (level >= 20) return 3;
+    if (level >= 80) return 5;
+    if (level >= 50) return 4;
+    if (level >= 30) return 3;
     if (level >= 10) return 2;
     return 1;
 
@@ -187,6 +187,16 @@ window.addEventListener("DOMContentLoaded", () => {
             player.inventory = [];
         }
 
+        // コンボが未設定の場合は0にしておく
+        if (!player.combo) {
+            player.combo = 0;
+        }
+
+        // リロード・再訪問時も前回のコンボを引き継げるように、
+        // Firestoreに保存されていたコンボを「継続確認の対象」としてセットしておく。
+        // (0ならダイアログは出さず、そのまま0から始まる)
+        previousCombo = player.combo;
+
         console.log("プレイヤーデータ取得成功");
 
         // home.html側の(まだFirebase化されていない)スクリプトが
@@ -281,6 +291,7 @@ function initializeGame(options = {}) {
 
     life = MAX_LIFE;
     combo = options.keepCombo ? previousCombo : 0;
+    player.combo = combo;
     correctAnswersCount = 0;
     questionsAnswered = 0;
     roundXPEarned = 0;
@@ -291,6 +302,8 @@ function initializeGame(options = {}) {
     els.gameoverOverlay.style.display = "none";
     els.clearOverlay.classList.remove("show");
     els.clearOverlay.style.display = "none";
+
+    saveGame();
 
     nextQuestion();
     updateDisplay();
@@ -391,6 +404,7 @@ function handleCorrect() {
     showJudgeMark("○");
 
     combo++;
+    player.combo = combo;
     correctAnswersCount++;
 
     const comboBonus = Math.floor(combo / COMBO_BONUS_STEP) * COMBO_BONUS_XP;
@@ -438,7 +452,7 @@ function handleWrong() {
     showJudgeMark("×");
 
     combo = 0;
-    life--;
+    player.combo = 0;
 
     shakeLife();
 
