@@ -150,7 +150,8 @@ export async function saveAll({
     monster,
     monsterLevel,
     inventory,
-    friendCode
+    friendCode,
+    combo
 
 }) {
 
@@ -164,7 +165,8 @@ export async function saveAll({
         monster,
         monsterLevel,
         inventory,
-        friendCode
+        friendCode,
+        combo
 
     });
 
