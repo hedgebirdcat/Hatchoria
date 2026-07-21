@@ -544,8 +544,63 @@ function updateDisplay() {
     els.coinText.innerText = "🪙 " + player.coins;
 
     const stage = getMonsterStage(player.level);
-    els.charDisplay.innerHTML =
-        `<img src="assets/images/${player.monster}_${stage}.png" alt="character">`;
+    updateCharacterImage(stage);
+
+}
+
+// ======================================
+// モンスター画像の更新・進化演出
+// ======================================
+
+let lastMonsterStage = null; // まだ表示していない
+
+function updateCharacterImage(stage) {
+
+    const newSrc = `assets/images/${player.monster}_${stage}.png`;
+
+    if (lastMonsterStage === null) {
+
+        // 初回表示は演出なしでそのまま表示
+        els.charDisplay.innerHTML =
+            `<img id="monster-img" src="${newSrc}" alt="character">` +
+            `<div id="evolution-flash"></div>`;
+
+    } else if (stage !== lastMonsterStage) {
+
+        playEvolutionAnimation(newSrc);
+
+    } else {
+
+        const img = els.charDisplay.querySelector("img");
+        if (img) img.src = newSrc;
+
+    }
+
+    lastMonsterStage = stage;
+
+}
+
+function playEvolutionAnimation(newSrc) {
+
+    const flash = els.charDisplay.querySelector("#evolution-flash");
+    const img = els.charDisplay.querySelector("img");
+
+    if (!flash || !img) return;
+
+    // 2秒かけて白く染まっていく
+    flash.style.transition = "opacity 2s ease-in";
+    flash.style.opacity = "1";
+
+    setTimeout(() => {
+
+        // 真っ白になったタイミングで裏の画像を次の姿に差し替え、
+        // パッと弾けるように一瞬でフラッシュを消す
+        img.src = newSrc;
+
+        flash.style.transition = "opacity 0.25s ease-out";
+        flash.style.opacity = "0";
+
+    }, 2000);
 
 }
 
