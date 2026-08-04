@@ -44,6 +44,17 @@
             color: #2e7d32;
             letter-spacing: 2px;
         }
+        #app-loading-retry-btn {
+            margin-top: 6px;
+            padding: 12px 40px;
+            font-size: 16px;
+            font-weight: 900;
+            color: white;
+            background: #2e7d32;
+            border: none;
+            border-radius: 999px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
         @keyframes appLoadingSpin {
             to { transform: rotate(360deg); }
         }
@@ -466,6 +477,113 @@
             border-radius: 30px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.2);
             border: 4px solid #ba68c8;
+        }
+        #friend-screen { display: none; }
+        .friend-container {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 90%;
+            max-width: 440px;
+            max-height: 80vh;
+            overflow-y: auto;
+            background: white;
+            padding: 30px 22px;
+            border-radius: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            border: 4px solid #4fc3f7;
+        }
+        .friend-screen-title {
+            font-size: 26px;
+            font-weight: 900;
+            color: #0288d1;
+            margin-bottom: 18px;
+            text-align: center;
+        }
+        .friend-section {
+            margin-bottom: 24px;
+        }
+        .friend-section-title {
+            font-size: 15px;
+            font-weight: 900;
+            color: #555;
+            margin-bottom: 8px;
+            border-left: 5px solid #4fc3f7;
+            padding-left: 8px;
+        }
+        .friend-add-row {
+            display: flex;
+            gap: 8px;
+        }
+        #friend-code-input {
+            flex: 1;
+            padding: 12px 14px;
+            border: 2px solid #ddd;
+            border-radius: 999px;
+            font-size: 15px;
+            outline: none;
+        }
+        #friend-request-btn {
+            padding: 12px 18px;
+            border: none;
+            border-radius: 999px;
+            background: #4fc3f7;
+            color: white;
+            font-weight: 900;
+            font-size: 14px;
+            white-space: nowrap;
+        }
+        #friend-request-message {
+            margin-top: 8px;
+            font-size: 13px;
+            font-weight: bold;
+            color: #e53935;
+            min-height: 16px;
+        }
+        .friend-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .friend-list-empty {
+            font-size: 13px;
+            color: #999;
+            padding: 10px 0;
+        }
+        .friend-card {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: #f5fbff;
+            border-radius: 16px;
+            padding: 10px 14px;
+        }
+        .friend-card img {
+            width: 44px;
+            height: 44px;
+            object-fit: contain;
+        }
+        .friend-card-info {
+            flex: 1;
+            text-align: left;
+        }
+        .friend-card-name {
+            font-weight: 900;
+            font-size: 15px;
+            color: #333;
+        }
+        .friend-card-level {
+            font-size: 12px;
+            color: #888;
+        }
+        .friend-approve-btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 999px;
+            background: #66bb6a;
+            color: white;
+            font-weight: 900;
+            font-size: 13px;
         }
         .gacha-screen-title {
             font-size: 28px;
@@ -1070,6 +1188,7 @@
     <div id="app-loading-overlay">
         <div id="app-loading-spinner"></div>
         <div id="app-loading-text">読み込み中...</div>
+        <button id="app-loading-retry-btn" style="display:none;">再読み込み</button>
     </div>
 
     <div id="firework-layer"></div>
@@ -1093,6 +1212,7 @@
             <div class="popup-title" style="color: #37474f;">⚙️ 設定メニュー</div>
             <div style="margin-top: 20px;">
                 <button id="menu-profile-btn" class="menu-list-btn">👤 プロフィール確認</button>
+                <button id="menu-friends-btn" class="menu-list-btn">🤝 フレンド</button>
                 <button id="menu-reset-btn" class="menu-list-btn" style="color:#d32f2f;">🚨 セーブデータのリセット</button>
             </div>
             <button id="setting-menu-close-btn" class="secondary-btn">閉じる</button>
@@ -1115,6 +1235,40 @@
             </div>
 
             <button id="profile-close-btn" class="secondary-btn">戻る</button>
+        </div>
+    </div>
+
+    <div id="friends-overlay" class="game-overlay">
+        <div class="popup-card" style="border-color: #29b6f6; max-height: 82vh; overflow-y: auto;">
+            <div class="popup-title" style="color: #0288d1;">🤝 フレンド</div>
+
+            <div class="profile-info-box">
+                <div class="profile-label">自分のフレンドコード</div>
+                <div class="code-row">
+                    <span id="friends-own-code" class="code-text">----------</span>
+                </div>
+            </div>
+
+            <div style="margin-top: 18px; text-align: left;">
+                <div class="profile-label">フレンドコードを入力して申請</div>
+                <div class="code-row">
+                    <input id="friends-add-input" type="text" placeholder="フレンドコードを入力" style="flex:1; padding:10px; border-radius:10px; border:1px solid #ccc;">
+                    <button id="friends-add-btn" class="copy-btn">申請</button>
+                </div>
+                <div id="friends-add-message" style="font-size:13px; margin-top:6px; min-height:18px;"></div>
+            </div>
+
+            <div id="friends-requests-section" style="margin-top: 20px; text-align: left; display:none;">
+                <div class="profile-label">届いている申請</div>
+                <div id="friends-requests-list"></div>
+            </div>
+
+            <div style="margin-top: 20px; text-align: left;">
+                <div class="profile-label">フレンド一覧</div>
+                <div id="friends-list"></div>
+            </div>
+
+            <button id="friends-close-btn" class="secondary-btn">戻る</button>
         </div>
     </div>
 
@@ -1166,7 +1320,7 @@
 
             <div class="home-footer-menu">
                 <button id="home-gacha-btn" class="circle-menu-btn" data-label="ガチャ">📦</button>
-                <button class="circle-menu-btn dummy-btn" data-label="準備中">🔒</button>
+                <button id="home-friend-btn" class="circle-menu-btn" data-label="フレンド">👥</button>
                 <button class="circle-menu-btn dummy-btn" data-label="準備中">🔒</button>
                 <button class="circle-menu-btn dummy-btn" data-label="準備中">🔒</button>
             </div>
@@ -1248,6 +1402,32 @@
             <div id="gacha-choice-container">
                 <button id="gacha-convert-btn" class="gacha-choice-btn">コインに変換する</button>
                 <button id="gacha-keep-btn" class="gacha-choice-btn">所持する</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="friend-screen" class="screen">
+        <button id="friend-back-btn" class="nav-btn">← HOME</button>
+        <div class="friend-container">
+            <div class="friend-screen-title">👥 フレンド</div>
+
+            <div class="friend-section">
+                <div class="friend-section-title">フレンドコードで申請</div>
+                <div class="friend-add-row">
+                    <input id="friend-code-input" type="text" placeholder="フレンドコードを入力" maxlength="10">
+                    <button id="friend-request-btn">申請する</button>
+                </div>
+                <div id="friend-request-message"></div>
+            </div>
+
+            <div class="friend-section">
+                <div class="friend-section-title">届いている申請</div>
+                <div id="friend-incoming-list" class="friend-list"></div>
+            </div>
+
+            <div class="friend-section">
+                <div class="friend-section-title">フレンド一覧</div>
+                <div id="friend-list" class="friend-list"></div>
             </div>
         </div>
     </div>
@@ -1419,5 +1599,6 @@
     <script type="module" src="game.js"></script>
     <script type="module" src="gacha.js"></script>
     <script type="module" src="profile.js"></script>
+    <script type="module" src="friends.js"></script>
 </body>
 </html>
