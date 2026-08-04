@@ -17,6 +17,8 @@ import {
     getPlayerData
 } from "./save.js";
 
+import { registerFriendCode } from "./gameFirebase.js";
+
 // ======================================
 // 単語データ (実験用に3単語のみ)
 // ======================================
@@ -210,6 +212,13 @@ window.addEventListener("DOMContentLoaded", () => {
             // Firestoreに保存されていたコンボを「継続確認の対象」としてセットしておく。
             // (0ならダイアログは出さず、そのまま0から始まる)
             previousCombo = player.combo;
+
+            // すでにフレンドコードを持っている場合、検索用インデックスに
+            // 登録済みか分からないので念のため毎回登録し直しておく
+            // (setDocでの上書きなので、すでに登録済みでも問題ない)
+            if (player.friendCode) {
+                registerFriendCode(player.friendCode, player.accountName);
+            }
 
             console.log("プレイヤーデータ取得成功");
 
