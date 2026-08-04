@@ -139,7 +139,7 @@ window.addEventListener("DOMContentLoaded", () => {
     loadingTimeoutId = setTimeout(() => {
 
         console.error("読み込みがタイムアウトしました。");
-        showLoadingError();
+        showLoadingError(hasInitialized ? "timeout (Firestore読み込み中)" : "timeout (ログイン確認中)");
 
     }, 10000);
 
@@ -235,7 +235,7 @@ window.addEventListener("DOMContentLoaded", () => {
             // 再読み込みボタンを出して、ユーザーがやり直せるようにする。
             console.error("プレイヤーデータの読み込みに失敗しました。", error);
             hasInitialized = false;
-            showLoadingError();
+            showLoadingError((error && (error.code || error.message)) || String(error));
 
         }
 
@@ -760,7 +760,7 @@ function hideLoadingOverlay() {
 
 }
 
-function showLoadingError() {
+function showLoadingError(detail) {
 
     if (loadingTimeoutId) {
         clearTimeout(loadingTimeoutId);
@@ -772,7 +772,24 @@ function showLoadingError() {
     const retryBtn = document.getElementById("app-loading-retry-btn");
 
     if (spinner) spinner.style.display = "none";
-    if (text) text.innerText = "読み込みに失敗しました。もう一度お試しください。";
+
+    if (text) {
+        text.innerText = "読み込みに失敗しました。もう一度お試しください。";
+
+        if (detail) {
+
+            const detailLine = document.createElement("div");
+            detailLine.style.fontSize = "12px";
+            detailLine.style.fontWeight = "400";
+            detailLine.style.marginTop = "8px";
+            detailLine.style.color = "#555";
+            detailLine.style.wordBreak = "break-all";
+            detailLine.innerText = "詳細: " + detail;
+            text.appendChild(detailLine);
+
+        }
+
+    }
 
     if (retryBtn) {
 
