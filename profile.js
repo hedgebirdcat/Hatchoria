@@ -9,6 +9,7 @@
 // そのまま読み書きする。ここではローカルの username/usercode は持たない。
 
 import { getPlayerData, saveGame } from "./save.js";
+import { registerFriendCode } from "./gameFirebase.js";
 
 const DEFAULT_MONSTER = "leaf";
 const DEFAULT_GOAL = 50;
@@ -87,6 +88,7 @@ function submitAccountName() {
     player.friendCode = generateFriendCode();
 
     saveGame();
+    registerFriendCode(player.friendCode, player.accountName);
 
     els.accountCreationOverlay.classList.remove("show");
 
