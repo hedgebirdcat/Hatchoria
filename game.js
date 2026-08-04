@@ -117,6 +117,11 @@ function cacheElements() {
 // ゲームの初期化・イベント登録は最初の1回だけ行う
 let hasInitialized = false;
 
+// 読み込みが一定時間で終わらない場合に備えたタイムアウト
+// (認証確認やFirestoreの読み込みがハングして、ローディング画面が
+//  永遠に回り続けてしまう事態を防ぐための保険)
+let loadingTimeoutId = null;
+
 window.addEventListener("DOMContentLoaded", () => {
 
     console.log("game.js 起動");
@@ -130,6 +135,13 @@ window.addEventListener("DOMContentLoaded", () => {
         return;
 
     }
+
+    loadingTimeoutId = setTimeout(() => {
+
+        console.error("読み込みがタイムアウトしました。");
+        showLoadingError();
+
+    }, 10000);
 
     // Firebaseの認証状態が確定するまで待つ
     // (ページ遷移直後は auth.currentUser がまだ null のことがあるため、
@@ -154,65 +166,78 @@ window.addEventListener("DOMContentLoaded", () => {
         if (hasInitialized) return;
         hasInitialized = true;
 
-        // Firebaseからロード
-        player = await loadSaveData();
+        try {
 
-        if (!player) {
+            // Firebaseからロード
+            player = await loadSaveData();
 
-            console.log("プレイヤーデータ取得失敗。ログイン画面に戻ります。");
+            if (!player) {
+
+                console.log("プレイヤーデータ取得失敗。ログイン画面に戻ります。");
+                hideLoadingOverlay();
+                window.location.href = "index.html";
+                return;
+
+            }
+
+            // 必要XP(goal)が未設定の場合は初期値を補う
+            if (!player.goal) {
+                player.goal = DEFAULT_GOAL;
+            }
+
+            // モンスターの種類が未設定の場合は初期値を補う
+            if (!player.monster) {
+                player.monster = DEFAULT_MONSTER;
+            }
+
+            // monsterLevelが未設定の場合はlevelに合わせておく
+            // (Firestoreへのupdateはundefinedの値があるとエラーになるため)
+            if (!player.monsterLevel) {
+                player.monsterLevel = player.level;
+            }
+
+            // ガチャで獲得したアイテム一覧が未設定の場合は空配列にしておく
+            if (!player.inventory) {
+                player.inventory = [];
+            }
+
+            // コンボが未設定の場合は0にしておく
+            if (!player.combo) {
+                player.combo = 0;
+            }
+
+            // リロード・再訪問時も前回のコンボを引き継げるように、
+            // Firestoreに保存されていたコンボを「継続確認の対象」としてセットしておく。
+            // (0ならダイアログは出さず、そのまま0から始まる)
+            previousCombo = player.combo;
+
+            console.log("プレイヤーデータ取得成功");
+
+            // home.html側の(まだFirebase化されていない)スクリプトが
+            // コイン・レベル等を同じデータとして参照・保存できるように、
+            // プレイヤーデータと保存関数を window 経由で公開する。
+            // これにより「ゲーム画面のコイン」と「ホーム画面のコイン」が
+            // 常に同じ数字になる(同じオブジェクトを見ているだけなので)。
+            window.HatchoriaPlayer = player;
+            window.HatchoriaSave = { save: saveGame };
+            window.dispatchEvent(new Event("hatchoria:playerReady"));
+
             hideLoadingOverlay();
-            window.location.href = "index.html";
-            return;
+
+            // ここでは initializeGame() を呼ばない。
+            // (呼ぶとホーム画面にいる間にもボーナス抽選が走ってしまうため。
+            //  実際にゲーム画面に入った時だけ hatchoria:enterGame で開始する)
+
+        } catch (error) {
+
+            // 通信エラーなどで読み込みに失敗した場合、
+            // ローディング画面が消えないまま固まってしまうのを防ぐ。
+            // 再読み込みボタンを出して、ユーザーがやり直せるようにする。
+            console.error("プレイヤーデータの読み込みに失敗しました。", error);
+            hasInitialized = false;
+            showLoadingError();
 
         }
-
-        // 必要XP(goal)が未設定の場合は初期値を補う
-        if (!player.goal) {
-            player.goal = DEFAULT_GOAL;
-        }
-
-        // モンスターの種類が未設定の場合は初期値を補う
-        if (!player.monster) {
-            player.monster = DEFAULT_MONSTER;
-        }
-
-        // monsterLevelが未設定の場合はlevelに合わせておく
-        // (Firestoreへのupdateはundefinedの値があるとエラーになるため)
-        if (!player.monsterLevel) {
-            player.monsterLevel = player.level;
-        }
-
-        // ガチャで獲得したアイテム一覧が未設定の場合は空配列にしておく
-        if (!player.inventory) {
-            player.inventory = [];
-        }
-
-        // コンボが未設定の場合は0にしておく
-        if (!player.combo) {
-            player.combo = 0;
-        }
-
-        // リロード・再訪問時も前回のコンボを引き継げるように、
-        // Firestoreに保存されていたコンボを「継続確認の対象」としてセットしておく。
-        // (0ならダイアログは出さず、そのまま0から始まる)
-        previousCombo = player.combo;
-
-        console.log("プレイヤーデータ取得成功");
-
-        // home.html側の(まだFirebase化されていない)スクリプトが
-        // コイン・レベル等を同じデータとして参照・保存できるように、
-        // プレイヤーデータと保存関数を window 経由で公開する。
-        // これにより「ゲーム画面のコイン」と「ホーム画面のコイン」が
-        // 常に同じ数字になる(同じオブジェクトを見ているだけなので)。
-        window.HatchoriaPlayer = player;
-        window.HatchoriaSave = { save: saveGame };
-        window.dispatchEvent(new Event("hatchoria:playerReady"));
-
-        hideLoadingOverlay();
-
-        // ここでは initializeGame() を呼ばない。
-        // (呼ぶとホーム画面にいる間にもボーナス抽選が走ってしまうため。
-        //  実際にゲーム画面に入った時だけ hatchoria:enterGame で開始する)
 
         // イベント登録
         els.checkBtn.addEventListener("click", handleCheck);
@@ -718,6 +743,11 @@ function updateQuestionCounter() {
 
 function hideLoadingOverlay() {
 
+    if (loadingTimeoutId) {
+        clearTimeout(loadingTimeoutId);
+        loadingTimeoutId = null;
+    }
+
     const overlay = document.getElementById("app-loading-overlay");
 
     if (!overlay) return;
@@ -727,6 +757,31 @@ function hideLoadingOverlay() {
     setTimeout(() => {
         overlay.style.display = "none";
     }, 500);
+
+}
+
+function showLoadingError() {
+
+    if (loadingTimeoutId) {
+        clearTimeout(loadingTimeoutId);
+        loadingTimeoutId = null;
+    }
+
+    const spinner = document.getElementById("app-loading-spinner");
+    const text = document.getElementById("app-loading-text");
+    const retryBtn = document.getElementById("app-loading-retry-btn");
+
+    if (spinner) spinner.style.display = "none";
+    if (text) text.innerText = "読み込みに失敗しました。もう一度お試しください。";
+
+    if (retryBtn) {
+
+        retryBtn.style.display = "inline-block";
+        retryBtn.addEventListener("click", () => {
+            location.reload();
+        });
+
+    }
 
 }
 
