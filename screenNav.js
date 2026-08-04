@@ -17,12 +17,14 @@
 //     hatchoria:enterHome    ホーム画面に入った
 //     hatchoria:enterGame    ゲーム画面に入った(クイズ開始)
 //     hatchoria:enterGacha   ガチャ画面に入った
+//     hatchoria:enterFriends フレンド画面に入った
 
 const SCREENS = {
     home:      document.getElementById("home-screen"),
     adventure: document.getElementById("story-adventure-screen"),
     game:      document.getElementById("game-screen"),
-    gacha:     document.getElementById("gacha-screen")
+    gacha:     document.getElementById("gacha-screen"),
+    friends:   document.getElementById("friend-screen")
 };
 
 function showScreen(name) {
@@ -80,6 +82,19 @@ document.getElementById("home-gacha-btn")
 
 // ガチャ画面 → ホームに戻る
 document.getElementById("gacha-back-btn")
+    ?.addEventListener("click", goHome);
+
+// ホーム → フレンド画面
+document.getElementById("home-friend-btn")
+    ?.addEventListener("click", () => {
+
+        showScreen("friends");
+        window.dispatchEvent(new Event("hatchoria:enterFriends"));
+
+    });
+
+// フレンド画面 → ホームに戻る
+document.getElementById("friend-back-btn")
     ?.addEventListener("click", goHome);
 
 // game.js から「ホームに戻りたい」という要求を受けたら戻る
