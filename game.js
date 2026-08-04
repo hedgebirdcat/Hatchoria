@@ -594,13 +594,63 @@ function playEvolutionAnimation(newSrc) {
     setTimeout(() => {
 
         // 真っ白になったタイミングで裏の画像を次の姿に差し替え、
-        // パッと弾けるように一瞬でフラッシュを消す
+        // 白い球が弾けるようなパーティクル演出を再生する
         img.src = newSrc;
 
-        flash.style.transition = "opacity 0.25s ease-out";
+        flash.style.transition = "opacity 0.15s ease-out";
         flash.style.opacity = "0";
 
+        spawnEvolutionBurst();
+
     }, 2000);
+
+}
+
+function spawnEvolutionBurst() {
+
+    const container = els.charDisplay;
+
+    // 中心から広がる衝撃波(白い球が膨らんで消える)
+    const wave = document.createElement("div");
+    wave.className = "evo-shockwave";
+    container.appendChild(wave);
+
+    const waveAnim = wave.animate([
+        { transform: "scale(0.2)", opacity: 1 },
+        { transform: "scale(1)", opacity: 1, offset: 0.35 },
+        { transform: "scale(3.2)", opacity: 0 }
+    ], {
+        duration: 600,
+        easing: "cubic-bezier(0.1, 0.6, 0.3, 1)"
+    });
+
+    waveAnim.onfinish = () => wave.remove();
+
+    // 弾け飛ぶ白い粒子
+    const particleCount = 16;
+
+    for (let i = 0; i < particleCount; i++) {
+
+        const p = document.createElement("div");
+        p.className = "evo-particle";
+        container.appendChild(p);
+
+        const angle = (Math.PI * 2 * i) / particleCount + (Math.random() * 0.3 - 0.15);
+        const dist = 55 + Math.random() * 45;
+        const dx = Math.cos(angle) * dist;
+        const dy = Math.sin(angle) * dist;
+
+        const anim = p.animate([
+            { transform: "translate(0, 0) scale(1)", opacity: 1 },
+            { transform: `translate(${dx}px, ${dy}px) scale(0)`, opacity: 0 }
+        ], {
+            duration: 550 + Math.random() * 250,
+            easing: "cubic-bezier(0.15, 0.6, 0.3, 1)"
+        });
+
+        anim.onfinish = () => p.remove();
+
+    }
 
 }
 
