@@ -3,6 +3,9 @@
 // friends.js
 // フレンド機能(申請 → 承認式)
 // ======================================
+//
+// もともと用意されていた friends-overlay(プロフィール・設定と
+// 同じポップアップ形式)を使って、フレンドの申請・承認・一覧表示を行う。
 
 import { getPlayerData } from "./save.js";
 
@@ -20,11 +23,22 @@ let els = {};
 function cacheElements() {
 
     els = {
-        codeInput: document.getElementById("friend-code-input"),
-        requestBtn: document.getElementById("friend-request-btn"),
-        requestMessage: document.getElementById("friend-request-message"),
-        incomingList: document.getElementById("friend-incoming-list"),
-        friendList: document.getElementById("friend-list")
+        friendDiamond: document.getElementById("home-friend-diamond"),
+        menuFriendsBtn: document.getElementById("menu-friends-btn"),
+        settingMenuOverlay: document.getElementById("setting-menu-overlay"),
+
+        overlay: document.getElementById("friends-overlay"),
+        closeBtn: document.getElementById("friends-close-btn"),
+        ownCode: document.getElementById("friends-own-code"),
+
+        addInput: document.getElementById("friends-add-input"),
+        addBtn: document.getElementById("friends-add-btn"),
+        addMessage: document.getElementById("friends-add-message"),
+
+        requestsSection: document.getElementById("friends-requests-section"),
+        requestsList: document.getElementById("friends-requests-list"),
+
+        friendsList: document.getElementById("friends-list")
     };
 
 }
@@ -47,34 +61,60 @@ function getMonsterImageSrc(monster, level) {
 }
 
 // ======================================
+// フレンド画面を開く
+// ======================================
+
+function openFriendsOverlay() {
+
+    els.settingMenuOverlay.classList.remove("show");
+
+    const me = getPlayerData();
+    els.ownCode.innerText = me && me.friendCode ? me.friendCode : "----------";
+
+    els.addMessage.innerText = "";
+    els.addInput.value = "";
+
+    els.overlay.classList.add("show");
+
+    renderIncomingRequests();
+    renderFriendsList();
+
+}
+
+function closeFriendsOverlay() {
+    els.overlay.classList.remove("show");
+}
+
+// ======================================
 // フレンド申請を送る
 // ======================================
 
 async function handleSendRequest() {
 
-    const code = els.codeInput.value.trim();
-    els.requestMessage.innerText = "";
+    const code = els.addInput.value.trim();
+    els.addMessage.style.color = "#e53935";
+    els.addMessage.innerText = "";
 
     if (!code) {
-        els.requestMessage.innerText = "フレンドコードを入力してください。";
+        els.addMessage.innerText = "フレンドコードを入力してください。";
         return;
     }
 
     const me = getPlayerData();
 
     if (!me) {
-        els.requestMessage.innerText = "読み込み中です。少し待ってから試してください。";
+        els.addMessage.innerText = "読み込み中です。少し待ってから試してください。";
         return;
     }
 
-    els.requestBtn.disabled = true;
+    els.addBtn.disabled = true;
 
     try {
 
         const target = await findByFriendCode(code);
 
         if (!target) {
-            els.requestMessage.innerText = "そのフレンドコードのユーザーが見つかりません。";
+            els.addMessage.innerText = "そのフレンドコードのユーザーが見つかりません。";
             return;
         }
 
@@ -82,36 +122,32 @@ async function handleSendRequest() {
 
         if (result.ok) {
 
-            els.requestMessage.style.color = "#2e7d32";
-            els.requestMessage.innerText = `${target.accountName} さんに申請を送りました！`;
-            els.codeInput.value = "";
+            els.addMessage.style.color = "#2e7d32";
+            els.addMessage.innerText = `${target.accountName} さんに申請を送りました！`;
+            els.addInput.value = "";
 
         } else if (result.reason === "self") {
 
-            els.requestMessage.style.color = "#e53935";
-            els.requestMessage.innerText = "自分自身には申請できません。";
+            els.addMessage.innerText = "自分自身には申請できません。";
 
         } else if (result.reason === "already-sent") {
 
-            els.requestMessage.style.color = "#e53935";
-            els.requestMessage.innerText = "すでに申請済みです。";
+            els.addMessage.innerText = "すでに申請済みです。";
 
         } else {
 
-            els.requestMessage.style.color = "#e53935";
-            els.requestMessage.innerText = "申請に失敗しました。もう一度お試しください。";
+            els.addMessage.innerText = "申請に失敗しました。もう一度お試しください。";
 
         }
 
     } catch (error) {
 
         console.error("フレンド申請エラー", error);
-        els.requestMessage.style.color = "#e53935";
-        els.requestMessage.innerText = "エラーが発生しました。もう一度お試しください。";
+        els.addMessage.innerText = "エラーが発生しました。もう一度お試しください。";
 
     } finally {
 
-        els.requestBtn.disabled = false;
+        els.addBtn.disabled = false;
 
     }
 
@@ -123,28 +159,30 @@ async function handleSendRequest() {
 
 async function renderIncomingRequests() {
 
-    els.incomingList.innerHTML = "読み込み中...";
+    els.requestsList.innerHTML = "読み込み中...";
 
     try {
 
         const requests = await getIncomingRequests();
 
         if (requests.length === 0) {
-            els.incomingList.innerHTML = `<div class="friend-list-empty">届いている申請はありません</div>`;
+            els.requestsSection.style.display = "none";
+            els.requestsList.innerHTML = "";
             return;
         }
 
-        els.incomingList.innerHTML = "";
+        els.requestsSection.style.display = "block";
+        els.requestsList.innerHTML = "";
 
         requests.forEach((req) => {
 
             const card = document.createElement("div");
-            card.className = "friend-card";
+            card.className = "friend-item-card";
 
             card.innerHTML = `
-                <div class="friend-card-info">
-                    <div class="friend-card-name">${req.fromName || "プレイヤー"}</div>
-                    <div class="friend-card-level">フレンド申請</div>
+                <div class="friend-item-info">
+                    <div class="friend-item-name">${req.fromName || "プレイヤー"}</div>
+                    <div class="friend-item-level">フレンド申請</div>
                 </div>
                 <button class="friend-approve-btn">承認する</button>
             `;
@@ -157,14 +195,15 @@ async function renderIncomingRequests() {
 
             });
 
-            els.incomingList.appendChild(card);
+            els.requestsList.appendChild(card);
 
         });
 
     } catch (error) {
 
         console.error("申請一覧の取得に失敗しました", error);
-        els.incomingList.innerHTML = `<div class="friend-list-empty">読み込みに失敗しました</div>`;
+        els.requestsSection.style.display = "block";
+        els.requestsList.innerHTML = `<div class="friend-empty-text">読み込みに失敗しました</div>`;
 
     }
 
@@ -176,25 +215,25 @@ async function renderIncomingRequests() {
 
 async function renderFriendsList() {
 
-    els.friendList.innerHTML = "読み込み中...";
+    els.friendsList.innerHTML = "読み込み中...";
 
     try {
 
         const friends = await getFriends();
 
         if (friends.length === 0) {
-            els.friendList.innerHTML = `<div class="friend-list-empty">まだフレンドがいません</div>`;
+            els.friendsList.innerHTML = `<div class="friend-empty-text">まだフレンドがいません</div>`;
             return;
         }
 
-        els.friendList.innerHTML = "";
+        els.friendsList.innerHTML = "";
 
         for (const friend of friends) {
 
             const data = await getFriendPublicData(friend.uid);
 
             const card = document.createElement("div");
-            card.className = "friend-card";
+            card.className = "friend-item-card";
 
             const name = (data && data.accountName) || friend.name || "プレイヤー";
             const level = data ? data.level : "?";
@@ -202,20 +241,20 @@ async function renderFriendsList() {
 
             card.innerHTML = `
                 ${imgSrc ? `<img src="${imgSrc}" alt="monster">` : ""}
-                <div class="friend-card-info">
-                    <div class="friend-card-name">${name}</div>
-                    <div class="friend-card-level">Lv.${level}</div>
+                <div class="friend-item-info">
+                    <div class="friend-item-name">${name}</div>
+                    <div class="friend-item-level">Lv.${level}</div>
                 </div>
             `;
 
-            els.friendList.appendChild(card);
+            els.friendsList.appendChild(card);
 
         }
 
     } catch (error) {
 
         console.error("フレンド一覧の取得に失敗しました", error);
-        els.friendList.innerHTML = `<div class="friend-list-empty">読み込みに失敗しました</div>`;
+        els.friendsList.innerHTML = `<div class="friend-empty-text">読み込みに失敗しました</div>`;
 
     }
 
@@ -229,21 +268,16 @@ window.addEventListener("DOMContentLoaded", () => {
 
     cacheElements();
 
-    if (!els.requestBtn) {
+    if (!els.overlay) {
 
-        // フレンド画面が存在しないページでは何もしない
+        // フレンドUIが存在しないページでは何もしない
         return;
 
     }
 
-    els.requestBtn.addEventListener("click", handleSendRequest);
-
-});
-
-// screenNav.js から「フレンド画面に入った」通知を受けたら一覧を更新
-window.addEventListener("hatchoria:enterFriends", () => {
-
-    renderIncomingRequests();
-    renderFriendsList();
+    els.friendDiamond?.addEventListener("click", openFriendsOverlay);
+    els.menuFriendsBtn?.addEventListener("click", openFriendsOverlay);
+    els.closeBtn.addEventListener("click", closeFriendsOverlay);
+    els.addBtn.addEventListener("click", handleSendRequest);
 
 });
