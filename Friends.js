@@ -271,12 +271,28 @@ window.addEventListener("DOMContentLoaded", () => {
     if (!els.overlay) {
 
         // フレンドUIが存在しないページでは何もしない
+        alert("診断: friends-overlay が見つかりません。home.htmlが古い可能性があります。");
         return;
 
     }
 
-    els.friendDiamond?.addEventListener("click", openFriendsOverlay);
-    els.menuFriendsBtn?.addEventListener("click", openFriendsOverlay);
+    els.friendDiamond?.addEventListener("click", () => {
+        try {
+            openFriendsOverlay();
+        } catch (error) {
+            console.error("フレンド画面を開けませんでした", error);
+            alert("エラー: " + (error && error.message ? error.message : error));
+        }
+    });
+
+    els.menuFriendsBtn?.addEventListener("click", () => {
+        try {
+            openFriendsOverlay();
+        } catch (error) {
+            console.error("フレンド画面を開けませんでした", error);
+            alert("エラー: " + (error && error.message ? error.message : error));
+        }
+    });
     els.closeBtn.addEventListener("click", closeFriendsOverlay);
     els.addBtn.addEventListener("click", handleSendRequest);
 
