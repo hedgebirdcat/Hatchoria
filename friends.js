@@ -143,7 +143,8 @@ async function handleSendRequest() {
     } catch (error) {
 
         console.error("フレンド申請エラー", error);
-        els.addMessage.innerText = "エラーが発生しました。もう一度お試しください。";
+        const detail = (error && (error.code || error.message)) || String(error);
+        els.addMessage.innerText = "エラーが発生しました: " + detail;
 
     } finally {
 
