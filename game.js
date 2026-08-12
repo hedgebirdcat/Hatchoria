@@ -208,6 +208,17 @@ window.addEventListener("DOMContentLoaded", () => {
                 player.combo = 0;
             }
 
+            // プロフィール項目が未設定の場合のデフォルト値
+            if (!player.title) {
+                player.title = "";
+            }
+            if (!player.selfIntro) {
+                player.selfIntro = "";
+            }
+            if (!player.nameChangeCount) {
+                player.nameChangeCount = 0;
+            }
+
             // リロード・再訪問時も前回のコンボを引き継げるように、
             // Firestoreに保存されていたコンボを「継続確認の対象」としてセットしておく。
             // (0ならダイアログは出さず、そのまま0から始まる)
