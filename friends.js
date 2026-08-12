@@ -38,8 +38,33 @@ function cacheElements() {
         requestsSection: document.getElementById("friends-requests-section"),
         requestsList: document.getElementById("friends-requests-list"),
 
-        friendsList: document.getElementById("friends-list")
+        friendsList: document.getElementById("friends-list"),
+
+        friendProfileOverlay: document.getElementById("friend-profile-overlay"),
+        friendProfileCloseBtn: document.getElementById("friend-profile-close-btn"),
+        friendProfileRank: document.getElementById("friend-profile-rank"),
+        friendProfileName: document.getElementById("friend-profile-name"),
+        friendProfileTitle: document.getElementById("friend-profile-title"),
+        friendProfileIntro: document.getElementById("friend-profile-intro")
     };
+
+}
+
+// ======================================
+// 称号ラベル(profile.jsと同じ一覧)
+// ======================================
+
+const TITLES = [
+    { id: "beginner",   label: "ハッチョリア見習い", minLevel: 1 },
+    { id: "apprentice", label: "見習い調教師",       minLevel: 10 },
+    { id: "skilled",    label: "一人前の調教師",     minLevel: 30 },
+    { id: "veteran",    label: "熟練の調教師",       minLevel: 50 },
+    { id: "legend",     label: "伝説の調教師",       minLevel: 80 }
+];
+
+function getTitleLabel(id) {
+    const t = TITLES.find((t) => t.id === id);
+    return t ? t.label : "なし";
 
 }
 
@@ -83,6 +108,48 @@ function openFriendsOverlay() {
 
 function closeFriendsOverlay() {
     els.overlay.classList.remove("show");
+}
+
+// ======================================
+// フレンドのプロフィールを見る
+// ======================================
+
+async function openFriendProfile(uid, fallbackName) {
+
+    els.friendProfileRank.innerText = "読み込み中...";
+    els.friendProfileName.innerText = fallbackName || "プレイヤー";
+    els.friendProfileTitle.innerText = "";
+    els.friendProfileIntro.innerText = "";
+
+    els.friendProfileOverlay.classList.add("show");
+
+    try {
+
+        const data = await getFriendPublicData(uid);
+
+        if (!data) {
+            els.friendProfileRank.innerText = "";
+            els.friendProfileIntro.innerText = "取得に失敗しました";
+            return;
+        }
+
+        els.friendProfileRank.innerText = "Lv." + data.level;
+        els.friendProfileName.innerText = data.accountName || "プレイヤー";
+        els.friendProfileTitle.innerText = getTitleLabel(data.title);
+        els.friendProfileIntro.innerText = data.selfIntro || "未設定";
+
+    } catch (error) {
+
+        console.error("フレンドのプロフィール取得に失敗しました", error);
+        els.friendProfileRank.innerText = "";
+        els.friendProfileIntro.innerText = "取得に失敗しました";
+
+    }
+
+}
+
+function closeFriendProfile() {
+    els.friendProfileOverlay.classList.remove("show");
 }
 
 // ======================================
@@ -248,6 +315,11 @@ async function renderFriendsList() {
                 </div>
             `;
 
+            card.style.cursor = "pointer";
+            card.addEventListener("click", () => {
+                openFriendProfile(friend.uid, name);
+            });
+
             els.friendsList.appendChild(card);
 
         }
@@ -296,5 +368,6 @@ window.addEventListener("DOMContentLoaded", () => {
     });
     els.closeBtn.addEventListener("click", closeFriendsOverlay);
     els.addBtn.addEventListener("click", handleSendRequest);
+    els.friendProfileCloseBtn.addEventListener("click", closeFriendProfile);
 
 });
