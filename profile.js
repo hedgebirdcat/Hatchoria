@@ -13,6 +13,25 @@ import { registerFriendCode } from "./gameFirebase.js";
 
 const DEFAULT_MONSTER = "leaf";
 const DEFAULT_GOAL = 50;
+const NAME_CHANGE_COST = 1500;
+
+// レベルに応じて自動解除される称号一覧
+const TITLES = [
+    { id: "beginner",   label: "ハッチョリア見習い", minLevel: 1 },
+    { id: "apprentice", label: "見習い調教師",       minLevel: 10 },
+    { id: "skilled",    label: "一人前の調教師",     minLevel: 30 },
+    { id: "veteran",    label: "熟練の調教師",       minLevel: 50 },
+    { id: "legend",     label: "伝説の調教師",       minLevel: 80 }
+];
+
+function getUnlockedTitles(level) {
+    return TITLES.filter((t) => level >= t.minLevel);
+}
+
+function getTitleLabel(id) {
+    const t = TITLES.find((t) => t.id === id);
+    return t ? t.label : "なし";
+}
 
 let els = {};
 
@@ -30,6 +49,28 @@ function cacheElements() {
         profileCopyBtn: document.getElementById("profile-copy-btn"),
         profileNameDisplay: document.getElementById("profile-name-display"),
         profileCodeDisplay: document.getElementById("profile-code-display"),
+        profileRankDisplay: document.getElementById("profile-rank-display"),
+
+        nameEditBtn: document.getElementById("profile-name-edit-btn"),
+        nameEditBox: document.getElementById("profile-name-edit-box"),
+        nameInput: document.getElementById("profile-name-input"),
+        nameCostNote: document.getElementById("profile-name-cost-note"),
+        nameSaveBtn: document.getElementById("profile-name-save-btn"),
+        nameCancelBtn: document.getElementById("profile-name-cancel-btn"),
+
+        titleDisplay: document.getElementById("profile-title-display"),
+        titleEditBtn: document.getElementById("profile-title-edit-btn"),
+        titleEditBox: document.getElementById("profile-title-edit-box"),
+        titleSelect: document.getElementById("profile-title-select"),
+        titleSaveBtn: document.getElementById("profile-title-save-btn"),
+        titleCancelBtn: document.getElementById("profile-title-cancel-btn"),
+
+        introDisplay: document.getElementById("profile-intro-display"),
+        introEditBtn: document.getElementById("profile-intro-edit-btn"),
+        introEditBox: document.getElementById("profile-intro-edit-box"),
+        introInput: document.getElementById("profile-intro-input"),
+        introSaveBtn: document.getElementById("profile-intro-save-btn"),
+        introCancelBtn: document.getElementById("profile-intro-cancel-btn"),
 
         accountCreationOverlay: document.getElementById("account-creation-overlay"),
         accountNameInput: document.getElementById("account-name-input"),
@@ -121,9 +162,17 @@ function openProfile() {
 
     els.profileNameDisplay.innerText = player ? player.accountName : "---";
     els.profileCodeDisplay.innerText = player ? player.friendCode : "----------";
+    els.profileRankDisplay.innerText = player ? "Lv." + player.level : "Lv.1";
+    els.titleDisplay.innerText = player ? getTitleLabel(player.title) : "なし";
+    els.introDisplay.innerText = (player && player.selfIntro) ? player.selfIntro : "未設定";
 
     els.profileCopyBtn.innerText = "コピー";
     els.profileCopyBtn.classList.remove("copied");
+
+    // 編集ボックスは毎回閉じた状態から始める
+    els.nameEditBox.classList.remove("show");
+    els.titleEditBox.classList.remove("show");
+    els.introEditBox.classList.remove("show");
 
     els.profileOverlay.classList.add("show");
 
@@ -131,6 +180,138 @@ function openProfile() {
 
 function closeProfile() {
     els.profileOverlay.classList.remove("show");
+}
+
+// ======================================
+// アカウント名の編集(2回目以降は1500コイン消費)
+// ======================================
+
+function openNameEdit() {
+
+    const player = getPlayerData();
+    if (!player) return;
+
+    els.nameInput.value = player.accountName || "";
+
+    els.nameCostNote.innerText = player.nameChangeCount > 0
+        ? `変更には🪙${NAME_CHANGE_COST}コイン必要です(所持: ${player.coins})`
+        : "初回の変更は無料です";
+
+    els.nameEditBox.classList.add("show");
+
+}
+
+function cancelNameEdit() {
+    els.nameEditBox.classList.remove("show");
+}
+
+async function saveNameEdit() {
+
+    const player = getPlayerData();
+    if (!player) return;
+
+    const newName = els.nameInput.value.trim();
+
+    if (!newName) {
+        alert("アカウント名を入力してください。");
+        return;
+    }
+
+    if (player.nameChangeCount > 0) {
+
+        if (player.coins < NAME_CHANGE_COST) {
+            alert(`コインが足りません。(変更には🪙${NAME_CHANGE_COST}必要です)`);
+            return;
+        }
+
+        player.coins -= NAME_CHANGE_COST;
+
+    }
+
+    player.accountName = newName;
+    player.nameChangeCount = (player.nameChangeCount || 0) + 1;
+
+    await saveGame();
+    registerFriendCode(player.friendCode, player.accountName);
+
+    els.profileNameDisplay.innerText = player.accountName;
+    els.nameEditBox.classList.remove("show");
+
+    window.dispatchEvent(new Event("hatchoria:playerReady"));
+
+}
+
+// ======================================
+// 称号の変更(レベルに応じて解除された一覧から選ぶ)
+// ======================================
+
+function openTitleEdit() {
+
+    const player = getPlayerData();
+    if (!player) return;
+
+    const unlocked = getUnlockedTitles(player.level);
+
+    els.titleSelect.innerHTML = `<option value="">なし</option>` +
+        unlocked.map((t) =>
+            `<option value="${t.id}">${t.label}</option>`
+        ).join("");
+
+    els.titleSelect.value = player.title || "";
+
+    els.titleEditBox.classList.add("show");
+
+}
+
+function cancelTitleEdit() {
+    els.titleEditBox.classList.remove("show");
+}
+
+async function saveTitleEdit() {
+
+    const player = getPlayerData();
+    if (!player) return;
+
+    player.title = els.titleSelect.value;
+
+    await saveGame();
+
+    els.titleDisplay.innerText = getTitleLabel(player.title);
+    els.titleEditBox.classList.remove("show");
+
+}
+
+// ======================================
+// 自己紹介の編集
+// ======================================
+
+function openIntroEdit() {
+
+    const player = getPlayerData();
+    if (!player) return;
+
+    els.introInput.value = player.selfIntro || "";
+
+    els.introEditBox.classList.add("show");
+
+}
+
+function cancelIntroEdit() {
+    els.introEditBox.classList.remove("show");
+}
+
+async function saveIntroEdit() {
+
+    const player = getPlayerData();
+    if (!player) return;
+
+    player.selfIntro = els.introInput.value.trim();
+
+    await saveGame();
+
+    els.introDisplay.innerText = player.selfIntro || "未設定";
+    els.introEditBox.classList.remove("show");
+
 }
 
 function copyFriendCode() {
@@ -215,6 +396,18 @@ window.addEventListener("DOMContentLoaded", () => {
 
     els.profileCloseBtn.addEventListener("click", closeProfile);
     els.profileCopyBtn.addEventListener("click", copyFriendCode);
+
+    els.nameEditBtn.addEventListener("click", openNameEdit);
+    els.nameCancelBtn.addEventListener("click", cancelNameEdit);
+    els.nameSaveBtn.addEventListener("click", saveNameEdit);
+
+    els.titleEditBtn.addEventListener("click", openTitleEdit);
+    els.titleCancelBtn.addEventListener("click", cancelTitleEdit);
+    els.titleSaveBtn.addEventListener("click", saveTitleEdit);
+
+    els.introEditBtn.addEventListener("click", openIntroEdit);
+    els.introCancelBtn.addEventListener("click", cancelIntroEdit);
+    els.introSaveBtn.addEventListener("click", saveIntroEdit);
 
     els.accountSubmitBtn.addEventListener("click", submitAccountName);
 
