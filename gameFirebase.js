@@ -332,7 +332,9 @@ export async function getFriendPublicData(uid) {
         accountName: data.accountName,
         level: data.level,
         monster: data.monster,
-        monsterLevel: data.monsterLevel
+        monsterLevel: data.monsterLevel,
+        title: data.title,
+        selfIntro: data.selfIntro
     };
 
 }
