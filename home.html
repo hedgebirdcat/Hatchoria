@@ -213,6 +213,93 @@
             margin-bottom: 12px;
             word-break: break-all;
         }
+        .profile-popup-card {
+            max-height: 82vh;
+            overflow-y: auto;
+        }
+        .profile-edit-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+        .profile-edit-row .profile-value {
+            margin-bottom: 0;
+        }
+        .edit-btn {
+            flex-shrink: 0;
+            padding: 6px 14px;
+            border: none;
+            border-radius: 999px;
+            background: #eceff1;
+            color: #455a64;
+            font-weight: bold;
+            font-size: 12px;
+            cursor: pointer;
+        }
+        .profile-edit-box {
+            display: none;
+            background: white;
+            border: 2px solid #e91e63;
+            border-radius: 12px;
+            padding: 12px;
+            margin: -4px 0 16px 0;
+        }
+        .profile-edit-box.show {
+            display: block;
+        }
+        .profile-edit-box input,
+        .profile-edit-box select,
+        .profile-edit-box textarea {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 10px 12px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 14px;
+            outline: none;
+            font-family: inherit;
+        }
+        .profile-edit-box textarea {
+            resize: none;
+            height: 70px;
+        }
+        .profile-note {
+            font-size: 12px;
+            color: #e53935;
+            font-weight: bold;
+            margin-top: 6px;
+            min-height: 14px;
+        }
+        .profile-edit-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        .primary-btn-small, .secondary-btn-small {
+            flex: 1;
+            padding: 9px 0;
+            border: none;
+            border-radius: 999px;
+            font-weight: bold;
+            font-size: 13px;
+            cursor: pointer;
+        }
+        .primary-btn-small {
+            background: #e91e63;
+            color: white;
+        }
+        .secondary-btn-small {
+            background: #eceff1;
+            color: #455a64;
+        }
+        .profile-intro-text {
+            font-size: 14px;
+            font-weight: normal;
+            white-space: pre-wrap;
+        }
+
         .code-row {
             display: flex;
             align-items: center;
@@ -1154,13 +1241,54 @@
     </div>
 
     <div id="profile-overlay" class="game-overlay">
-        <div class="popup-card" style="border-color: #e91e63;">
+        <div class="popup-card profile-popup-card" style="border-color: #e91e63;">
             <div class="popup-title" style="color: #e91e63;">👤 プロフィール</div>
             
             <div class="profile-info-box">
+
+                <div class="profile-label">プレイヤーランク</div>
+                <div id="profile-rank-display" class="profile-value">Lv.1</div>
+
                 <div class="profile-label">アカウント名</div>
-                <div id="profile-name-display" class="profile-value">---</div>
-                
+                <div class="profile-edit-row">
+                    <div id="profile-name-display" class="profile-value">---</div>
+                    <button id="profile-name-edit-btn" class="edit-btn">編集</button>
+                </div>
+                <div id="profile-name-edit-box" class="profile-edit-box">
+                    <input id="profile-name-input" type="text" maxlength="12" placeholder="新しいアカウント名">
+                    <div id="profile-name-cost-note" class="profile-note"></div>
+                    <div class="profile-edit-actions">
+                        <button id="profile-name-save-btn" class="primary-btn-small">保存</button>
+                        <button id="profile-name-cancel-btn" class="secondary-btn-small">キャンセル</button>
+                    </div>
+                </div>
+
+                <div class="profile-label">称号</div>
+                <div class="profile-edit-row">
+                    <div id="profile-title-display" class="profile-value">なし</div>
+                    <button id="profile-title-edit-btn" class="edit-btn">変更</button>
+                </div>
+                <div id="profile-title-edit-box" class="profile-edit-box">
+                    <select id="profile-title-select"></select>
+                    <div class="profile-edit-actions">
+                        <button id="profile-title-save-btn" class="primary-btn-small">保存</button>
+                        <button id="profile-title-cancel-btn" class="secondary-btn-small">キャンセル</button>
+                    </div>
+                </div>
+
+                <div class="profile-label">自己紹介</div>
+                <div class="profile-edit-row">
+                    <div id="profile-intro-display" class="profile-value profile-intro-text">未設定</div>
+                    <button id="profile-intro-edit-btn" class="edit-btn">編集</button>
+                </div>
+                <div id="profile-intro-edit-box" class="profile-edit-box">
+                    <textarea id="profile-intro-input" maxlength="100" placeholder="自己紹介を入力(100文字まで)"></textarea>
+                    <div class="profile-edit-actions">
+                        <button id="profile-intro-save-btn" class="primary-btn-small">保存</button>
+                        <button id="profile-intro-cancel-btn" class="secondary-btn-small">キャンセル</button>
+                    </div>
+                </div>
+
                 <div class="profile-label">ユーザーコード（フレンド用）</div>
                 <div class="code-row">
                     <span id="profile-code-display" class="code-text">----------</span>
