@@ -606,6 +606,22 @@
             box-shadow: 0 10px 30px rgba(0,0,0,0.2);
             border: 4px solid #ba68c8;
         }
+        .friend-profile-container {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 90%;
+            max-width: 400px;
+            max-height: 82vh;
+            overflow-y: auto;
+            background: white;
+            padding: 30px 20px;
+            border-radius: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            border: 4px solid #29b6f6;
+            text-align: center;
+        }
+        #friend-profile-screen { display: none; }
         .gacha-screen-title {
             font-size: 28px;
             font-weight: 900;
@@ -788,7 +804,7 @@
         #home-btn { 
             position: absolute;
             top: 20px;
-            right: 20px;
+            left: 20px;
             width: 120px; 
             height: 55px;
             background: white;
@@ -1300,8 +1316,9 @@
         </div>
     </div>
 
-    <div id="friend-profile-overlay" class="game-overlay">
-        <div class="popup-card profile-popup-card" style="border-color: #29b6f6;">
+    <div id="friend-profile-screen" class="screen">
+        <button id="friend-profile-back-btn" class="nav-btn">ホームへ</button>
+        <div class="friend-profile-container">
             <div class="popup-title" style="color: #0288d1;">👤 プロフィール</div>
 
             <div class="profile-info-box">
@@ -1317,8 +1334,6 @@
                 <div class="profile-label">自己紹介</div>
                 <div id="friend-profile-intro" class="profile-value profile-intro-text">未設定</div>
             </div>
-
-            <button id="friend-profile-close-btn" class="secondary-btn">戻る</button>
         </div>
     </div>
 
@@ -1412,7 +1427,7 @@
     </div>
 
     <div id="story-adventure-screen" class="screen">
-        <button id="home-btn">HOME</button>
+        <button id="home-btn">ホームへ</button>
         <div class="choice-diamond story-choice locked">
             <div class="diamond-content">ストーリー<div class="lock-line">⛓️🔒⛓️</div></div>
         </div>
@@ -1422,7 +1437,7 @@
     </div>
 
     <div id="game-screen" class="screen">
-        <button id="back-btn" class="nav-btn">← HOME</button>
+        <button id="back-btn" class="nav-btn">ホームへ</button>
         <div id="life-container">❤️❤️❤️</div>
         <div id="question-counter">10/10</div>
         <div id="combo-display">🔥×0 COMBO!</div>
@@ -1475,7 +1490,7 @@
     </div>
 
     <div id="gacha-screen" class="screen">
-        <button id="gacha-back-btn" class="nav-btn">← HOME</button>
+        <button id="gacha-back-btn" class="nav-btn">ホームへ</button>
         <div class="gacha-container">
             <div class="gacha-screen-title">✨ 宝箱ガチャ ✨</div>
             <div id="gacha-screen-coin-text" class="gacha-coin-status">所持コイン: 🪙 0</div>
