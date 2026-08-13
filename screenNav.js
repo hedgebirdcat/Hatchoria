@@ -19,10 +19,11 @@
 //     hatchoria:enterGacha   ガチャ画面に入った
 
 const SCREENS = {
-    home:      document.getElementById("home-screen"),
-    adventure: document.getElementById("story-adventure-screen"),
-    game:      document.getElementById("game-screen"),
-    gacha:     document.getElementById("gacha-screen")
+    home:          document.getElementById("home-screen"),
+    adventure:     document.getElementById("story-adventure-screen"),
+    game:          document.getElementById("game-screen"),
+    gacha:         document.getElementById("gacha-screen"),
+    friendProfile: document.getElementById("friend-profile-screen")
 };
 
 function showScreen(name) {
@@ -45,6 +46,9 @@ function goHome() {
     window.dispatchEvent(new Event("hatchoria:enterHome"));
 
 }
+
+// friends.js など他のファイルから画面遷移を呼べるように公開する
+window.HatchoriaNav = { showScreen, goHome };
 
 // ホーム → アドベンチャー選択画面
 document.querySelector(".adventure")
@@ -80,6 +84,10 @@ document.getElementById("home-gacha-btn")
 
 // ガチャ画面 → ホームに戻る
 document.getElementById("gacha-back-btn")
+    ?.addEventListener("click", goHome);
+
+// フレンドプロフィール画面 → ホームに戻る
+document.getElementById("friend-profile-back-btn")
     ?.addEventListener("click", goHome);
 
 // game.js から「ホームに戻りたい」という要求を受けたら戻る
