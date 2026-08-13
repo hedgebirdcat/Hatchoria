@@ -15,7 +15,8 @@ import {
     collection,
     query,
     where,
-    getDocs
+    getDocs,
+    addDoc
 } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
 
 
@@ -336,5 +337,72 @@ export async function getFriendPublicData(uid) {
         title: data.title,
         selfIntro: data.selfIntro
     };
+
+}
+
+
+// ======================================
+// マッチ(リアルタイム対戦)機能
+// ======================================
+//
+// ステージ1: 対戦の申し込み・承認・辞退までの土台。
+// 実際に同時に問題を解くゲーム本体は次のステージで実装する。
+
+// フレンドに対戦を申し込む
+export async function sendMatchInvite(opponentUid, opponentName) {
+
+    const user = auth.currentUser;
+    if (!user) return { ok: false, reason: "not-logged-in" };
+
+    if (user.uid === opponentUid) {
+        return { ok: false, reason: "self" };
+    }
+
+    const player = await loadPlayerData();
+
+    await addDoc(collection(db, "matches"), {
+        inviterUid: user.uid,
+        inviterName: player ? player.accountName : "プレイヤー",
+        opponentUid: opponentUid,
+        opponentName: opponentName,
+        status: "pending",
+        createdAt: Date.now()
+    });
+
+    return { ok: true };
+
+}
+
+// 自分宛に届いている、承認待ちの対戦の誘い一覧
+export async function getIncomingMatchInvites() {
+
+    const user = auth.currentUser;
+    if (!user) return [];
+
+    const q = query(
+        collection(db, "matches"),
+        where("opponentUid", "==", user.uid),
+        where("status", "==", "pending")
+    );
+
+    const snap = await getDocs(q);
+
+    return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+
+}
+
+// 対戦の誘いを承認する
+export async function acceptMatchInvite(matchId) {
+
+    const ref = doc(db, "matches", matchId);
+    await updateDoc(ref, { status: "active" });
+
+}
+
+// 対戦の誘いを辞退する(削除)
+export async function declineMatchInvite(matchId) {
+
+    const ref = doc(db, "matches", matchId);
+    await deleteDoc(ref);
 
 }
