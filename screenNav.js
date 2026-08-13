@@ -23,7 +23,8 @@ const SCREENS = {
     adventure:     document.getElementById("story-adventure-screen"),
     game:          document.getElementById("game-screen"),
     gacha:         document.getElementById("gacha-screen"),
-    friendProfile: document.getElementById("friend-profile-screen")
+    friendProfile: document.getElementById("friend-profile-screen"),
+    match:         document.getElementById("match-screen")
 };
 
 function showScreen(name) {
@@ -88,6 +89,10 @@ document.getElementById("gacha-back-btn")
 
 // フレンドプロフィール画面 → ホームに戻る
 document.getElementById("friend-profile-back-btn")
+    ?.addEventListener("click", goHome);
+
+// マッチ画面 → ホームに戻る
+document.getElementById("match-back-btn")
     ?.addEventListener("click", goHome);
 
 // game.js から「ホームに戻りたい」という要求を受けたら戻る
