@@ -4,8 +4,9 @@
 // フレンド機能(申請 → 承認式)
 // ======================================
 //
-// もともと用意されていた friends-overlay(プロフィール・設定と
-// 同じポップアップ形式)を使って、フレンドの申請・承認・一覧表示を行う。
+// フレンド一覧・申請は friends-overlay(ポップアップ)、
+// フレンドのプロフィール表示は friend-profile-screen(独立画面、
+// screenNav.js が管理)を使う。
 
 import { getPlayerData } from "./save.js";
 
@@ -40,8 +41,6 @@ function cacheElements() {
 
         friendsList: document.getElementById("friends-list"),
 
-        friendProfileOverlay: document.getElementById("friend-profile-overlay"),
-        friendProfileCloseBtn: document.getElementById("friend-profile-close-btn"),
         friendProfileRank: document.getElementById("friend-profile-rank"),
         friendProfileName: document.getElementById("friend-profile-name"),
         friendProfileTitle: document.getElementById("friend-profile-title"),
@@ -116,12 +115,14 @@ function closeFriendsOverlay() {
 
 async function openFriendProfile(uid, fallbackName) {
 
+    // フレンド一覧のオーバーレイを閉じてから、専用の画面に遷移する
+    els.overlay.classList.remove("show");
+    window.HatchoriaNav?.showScreen("friendProfile");
+
     els.friendProfileRank.innerText = "読み込み中...";
     els.friendProfileName.innerText = fallbackName || "プレイヤー";
     els.friendProfileTitle.innerText = "";
     els.friendProfileIntro.innerText = "";
-
-    els.friendProfileOverlay.classList.add("show");
 
     try {
 
@@ -146,10 +147,6 @@ async function openFriendProfile(uid, fallbackName) {
 
     }
 
-}
-
-function closeFriendProfile() {
-    els.friendProfileOverlay.classList.remove("show");
 }
 
 // ======================================
@@ -368,6 +365,6 @@ window.addEventListener("DOMContentLoaded", () => {
     });
     els.closeBtn.addEventListener("click", closeFriendsOverlay);
     els.addBtn.addEventListener("click", handleSendRequest);
-    els.friendProfileCloseBtn.addEventListener("click", closeFriendProfile);
+    // フレンドプロフィール画面の「ホームへ」ボタンは screenNav.js が担当
 
 });
