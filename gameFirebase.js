@@ -420,7 +420,7 @@ export async function deleteMatch(matchId) {
 
 // 自分宛に届く対戦の誘いをリアルタイムで監視する
 // (コールバックには pending 状態の誘い一覧が渡される)
-export function listenIncomingMatchInvites(callback) {
+export function listenIncomingMatchInvites(callback, onError) {
 
     const user = auth.currentUser;
     if (!user) return () => {};
@@ -436,12 +436,17 @@ export function listenIncomingMatchInvites(callback) {
         const invites = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
         callback(invites);
 
+    }, (error) => {
+
+        console.error("対戦の誘いの監視でエラーが発生しました", error);
+        if (onError) onError(error);
+
     });
 
 }
 
 // 自分が送った対戦の誘いが「拒否された」ことをリアルタイムで監視する
-export function listenDeclinedMatches(callback) {
+export function listenDeclinedMatches(callback, onError) {
 
     const user = auth.currentUser;
     if (!user) return () => {};
@@ -456,6 +461,11 @@ export function listenDeclinedMatches(callback) {
 
         const declined = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
         callback(declined);
+
+    }, (error) => {
+
+        console.error("拒否通知の監視でエラーが発生しました", error);
+        if (onError) onError(error);
 
     });
 
