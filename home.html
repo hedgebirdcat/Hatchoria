@@ -396,6 +396,58 @@
             margin-left: 4px;
         }
 
+        #match-invite-popup, #match-declined-popup {
+            position: fixed;
+            inset: 0;
+            z-index: 60000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.5);
+        }
+        #match-invite-popup.show, #match-declined-popup.show {
+            display: flex;
+        }
+        .match-popup-box {
+            background: white;
+            border-radius: 22px;
+            padding: 28px 26px;
+            width: 82%;
+            max-width: 360px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+        }
+        .match-popup-name {
+            font-size: 20px;
+            font-weight: 900;
+            color: #333;
+        }
+        .match-popup-sub {
+            font-size: 13px;
+            color: #888;
+            margin-top: 6px;
+        }
+        .match-popup-buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 22px;
+        }
+        .match-popup-decline-btn, .match-popup-accept-btn {
+            flex: 1;
+            padding: 12px 0;
+            border: none;
+            border-radius: 999px;
+            font-weight: 900;
+            font-size: 15px;
+            color: white;
+        }
+        .match-popup-decline-btn {
+            background: #e53935;
+        }
+        .match-popup-accept-btn {
+            background: #43a047;
+        }
+
         /* ==========================================================================
            1. HOME SCREEN (ホーム画面)
            ========================================================================== */
@@ -1260,6 +1312,26 @@
     <div id="priority-message"></div>
     <div id="judge-overlay"><div id="judge-mark"></div></div>
     <div id="heart-break-overlay">❤️</div>
+
+    <div id="match-invite-popup">
+        <div class="match-popup-box">
+            <div id="match-invite-popup-name" class="match-popup-name">プレイヤー</div>
+            <div class="match-popup-sub">対戦を申し込んでいます</div>
+            <div class="match-popup-buttons">
+                <button id="match-invite-decline-btn" class="match-popup-decline-btn">拒否</button>
+                <button id="match-invite-accept-btn" class="match-popup-accept-btn">許可</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="match-declined-popup">
+        <div class="match-popup-box">
+            <div id="match-declined-popup-message" class="match-popup-name">相手に拒否されました</div>
+            <div class="match-popup-buttons">
+                <button id="match-declined-ok-btn" class="match-popup-accept-btn">OK</button>
+            </div>
+        </div>
+    </div>
 
     <div id="account-creation-overlay" class="game-overlay">
         <div class="popup-card">
