@@ -16,7 +16,8 @@ import {
     query,
     where,
     getDocs,
-    addDoc
+    addDoc,
+    onSnapshot
 } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
 
 
@@ -399,10 +400,63 @@ export async function acceptMatchInvite(matchId) {
 
 }
 
-// 対戦の誘いを辞退する(削除)
+// 対戦の誘いを辞退する
+// (削除ではなくstatusを変えることで、申請した側が「拒否された」と
+//  気づけるようにする)
 export async function declineMatchInvite(matchId) {
 
     const ref = doc(db, "matches", matchId);
+    await updateDoc(ref, { status: "declined" });
+
+}
+
+// マッチのドキュメントを削除する(通知確認後の後片付け用)
+export async function deleteMatch(matchId) {
+
+    const ref = doc(db, "matches", matchId);
     await deleteDoc(ref);
+
+}
+
+// 自分宛に届く対戦の誘いをリアルタイムで監視する
+// (コールバックには pending 状態の誘い一覧が渡される)
+export function listenIncomingMatchInvites(callback) {
+
+    const user = auth.currentUser;
+    if (!user) return () => {};
+
+    const q = query(
+        collection(db, "matches"),
+        where("opponentUid", "==", user.uid),
+        where("status", "==", "pending")
+    );
+
+    return onSnapshot(q, (snap) => {
+
+        const invites = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+        callback(invites);
+
+    });
+
+}
+
+// 自分が送った対戦の誘いが「拒否された」ことをリアルタイムで監視する
+export function listenDeclinedMatches(callback) {
+
+    const user = auth.currentUser;
+    if (!user) return () => {};
+
+    const q = query(
+        collection(db, "matches"),
+        where("inviterUid", "==", user.uid),
+        where("status", "==", "declined")
+    );
+
+    return onSnapshot(q, (snap) => {
+
+        const declined = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+        callback(declined);
+
+    });
 
 }
