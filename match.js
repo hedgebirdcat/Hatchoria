@@ -4,26 +4,47 @@
 // マッチ(フレンドとのリアルタイム対戦)機能
 // ======================================
 //
-// ステージ1: 対戦の申し込み・承認・辞退までの土台を実装する。
+// ステージ1: 対戦の申し込み・承認・辞退までの土台。
 // 実際に同時に問題を解くゲーム本体は次のステージで作る。
+//
+// 届いている対戦の誘いは、マッチ画面を開いていなくても
+// (ゲーム画面以外なら)ポップアップで通知する。
+// 申し込んだ側も、相手に拒否されたらポップアップで知らされる。
 
 import {
     getFriends,
     getFriendPublicData,
     sendMatchInvite,
-    getIncomingMatchInvites,
     acceptMatchInvite,
-    declineMatchInvite
+    declineMatchInvite,
+    deleteMatch,
+    listenIncomingMatchInvites,
+    listenDeclinedMatches
 } from "./gameFirebase.js";
 
 let els = {};
+
+// 現在届いている pending の誘い一覧(リアルタイム監視の結果)
+let incomingInvites = [];
+
+// まだ通知していない「拒否された」マッチのキュー
+let declinedQueue = [];
 
 function cacheElements() {
 
     els = {
         matchDiamond: document.getElementById("home-match-diamond"),
         invitesList: document.getElementById("match-invites-list"),
-        friendsList: document.getElementById("match-friends-list")
+        friendsList: document.getElementById("match-friends-list"),
+
+        invitePopup: document.getElementById("match-invite-popup"),
+        invitePopupName: document.getElementById("match-invite-popup-name"),
+        inviteAcceptBtn: document.getElementById("match-invite-accept-btn"),
+        inviteDeclineBtn: document.getElementById("match-invite-decline-btn"),
+
+        declinedPopup: document.getElementById("match-declined-popup"),
+        declinedMessage: document.getElementById("match-declined-popup-message"),
+        declinedOkBtn: document.getElementById("match-declined-ok-btn")
     };
 
 }
@@ -53,69 +74,101 @@ function openMatchScreen() {
 
     window.HatchoriaNav?.showScreen("match");
 
-    renderInvites();
+    renderInvitesList();
     renderFriendsForInvite();
 
 }
 
 // ======================================
-// 届いている対戦の誘い
+// 対戦の誘いへの応答(承諾・辞退で共通の処理)
 // ======================================
 
-async function renderInvites() {
+async function respondAccept(invite) {
 
-    els.invitesList.innerHTML = "読み込み中...";
+    await acceptMatchInvite(invite.id);
+    alert(`${invite.inviterName}さんとの対戦が始まります！(対戦ゲーム本体は近日実装予定です)`);
 
-    try {
+}
 
-        const invites = await getIncomingMatchInvites();
+async function respondDecline(invite) {
 
-        if (invites.length === 0) {
-            els.invitesList.innerHTML = `<div class="friend-empty-text">届いている対戦の誘いはありません</div>`;
-            return;
-        }
+    await declineMatchInvite(invite.id);
 
-        els.invitesList.innerHTML = "";
+}
 
-        invites.forEach((invite) => {
+// ======================================
+// グローバル通知ポップアップ(誘いが来た)
+// ======================================
 
-            const card = document.createElement("div");
-            card.className = "friend-item-card";
+function updateGlobalInvitePopup() {
 
-            card.innerHTML = `
-                <div class="friend-item-info">
-                    <div class="friend-item-name">${invite.inviterName || "プレイヤー"}</div>
-                    <div class="friend-item-level">対戦の誘い</div>
-                </div>
-                <button class="match-invite-btn">承諾</button>
-                <button class="match-decline-btn">辞退</button>
-            `;
+    const currentScreen = window.HatchoriaNav?.getCurrentScreen();
+    const invite = incomingInvites[0];
 
-            card.querySelector(".match-invite-btn").addEventListener("click", async () => {
-
-                await acceptMatchInvite(invite.id);
-                alert(`${invite.inviterName}さんとの対戦が始まります！(対戦ゲーム本体は近日実装予定です)`);
-                renderInvites();
-
-            });
-
-            card.querySelector(".match-decline-btn").addEventListener("click", async () => {
-
-                await declineMatchInvite(invite.id);
-                renderInvites();
-
-            });
-
-            els.invitesList.appendChild(card);
-
-        });
-
-    } catch (error) {
-
-        console.error("対戦の誘い一覧の取得に失敗しました", error);
-        els.invitesList.innerHTML = `<div class="friend-empty-text">読み込みに失敗しました</div>`;
-
+    // ゲーム中は絶対に出さない。誘いが無ければ出さない。
+    if (!invite || currentScreen === "game") {
+        els.invitePopup.classList.remove("show");
+        return;
     }
+
+    els.invitePopupName.innerText = invite.inviterName || "プレイヤー";
+    els.invitePopup.classList.add("show");
+
+}
+
+// ======================================
+// グローバル通知ポップアップ(拒否された)
+// ======================================
+
+function updateDeclinedPopup() {
+
+    const match = declinedQueue[0];
+
+    if (!match) {
+        els.declinedPopup.classList.remove("show");
+        return;
+    }
+
+    els.declinedMessage.innerText = `${match.opponentName || "相手"}さんに拒否されました`;
+    els.declinedPopup.classList.add("show");
+
+}
+
+// ======================================
+// マッチ画面内の「届いている誘い」一覧
+// ======================================
+
+function renderInvitesList() {
+
+    if (!els.invitesList) return;
+
+    if (incomingInvites.length === 0) {
+        els.invitesList.innerHTML = `<div class="friend-empty-text">届いている対戦の誘いはありません</div>`;
+        return;
+    }
+
+    els.invitesList.innerHTML = "";
+
+    incomingInvites.forEach((invite) => {
+
+        const card = document.createElement("div");
+        card.className = "friend-item-card";
+
+        card.innerHTML = `
+            <div class="friend-item-info">
+                <div class="friend-item-name">${invite.inviterName || "プレイヤー"}</div>
+                <div class="friend-item-level">対戦の誘い</div>
+            </div>
+            <button class="match-invite-btn">承諾</button>
+            <button class="match-decline-btn">辞退</button>
+        `;
+
+        card.querySelector(".match-invite-btn").addEventListener("click", () => respondAccept(invite));
+        card.querySelector(".match-decline-btn").addEventListener("click", () => respondDecline(invite));
+
+        els.invitesList.appendChild(card);
+
+    });
 
 }
 
@@ -204,5 +257,72 @@ window.addEventListener("DOMContentLoaded", () => {
     }
 
     els.matchDiamond.addEventListener("click", openMatchScreen);
+
+    // グローバル通知ポップアップのボタン
+    els.inviteAcceptBtn.addEventListener("click", async () => {
+
+        const invite = incomingInvites[0];
+        if (!invite) return;
+
+        els.invitePopup.classList.remove("show");
+        await respondAccept(invite);
+
+    });
+
+    els.inviteDeclineBtn.addEventListener("click", async () => {
+
+        const invite = incomingInvites[0];
+        if (!invite) return;
+
+        els.invitePopup.classList.remove("show");
+        await respondDecline(invite);
+
+    });
+
+    els.declinedOkBtn.addEventListener("click", async () => {
+
+        const match = declinedQueue.shift();
+        els.declinedPopup.classList.remove("show");
+
+        if (match) {
+            await deleteMatch(match.id);
+        }
+
+        updateDeclinedPopup();
+
+    });
+
+    // 画面が切り替わるたびに、通知ポップアップを出すべきか判定し直す
+    window.addEventListener("hatchoria:screenChanged", updateGlobalInvitePopup);
+
+});
+
+// game.js がプレイヤーデータを読み込み終えたら、
+// 対戦の誘い・拒否通知をリアルタイムで監視し始める
+window.addEventListener("hatchoria:playerReady", () => {
+
+    listenIncomingMatchInvites((invites) => {
+
+        incomingInvites = invites;
+        updateGlobalInvitePopup();
+        renderInvitesList();
+
+    });
+
+    listenDeclinedMatches((declined) => {
+
+        // まだキューに無いものだけ追加する(同じ内容で何度も
+        // 通知イベントが来ても、二重に並ばないようにする)
+        declined.forEach((match) => {
+
+            if (!declinedQueue.some((m) => m.id === match.id)) {
+                declinedQueue.push(match);
+            }
+
+        });
+
+        updateDeclinedPopup();
+
+    });
 
 });
