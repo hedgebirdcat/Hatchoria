@@ -307,6 +307,10 @@ window.addEventListener("hatchoria:playerReady", () => {
         updateGlobalInvitePopup();
         renderInvitesList();
 
+    }, (error) => {
+
+        alert("診断: 対戦の誘いの監視でエラー: " + (error && (error.code || error.message)));
+
     });
 
     listenDeclinedMatches((declined) => {
@@ -322,6 +326,10 @@ window.addEventListener("hatchoria:playerReady", () => {
         });
 
         updateDeclinedPopup();
+
+    }, (error) => {
+
+        alert("診断: 拒否通知の監視でエラー: " + (error && (error.code || error.message)));
 
     });
 
