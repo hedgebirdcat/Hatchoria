@@ -105,6 +105,9 @@ function updateGlobalInvitePopup() {
     const currentScreen = window.HatchoriaNav?.getCurrentScreen();
     const invite = incomingInvites[0];
 
+    // 診断用: 判定に使っている値を直接確認する
+    alert("診断: currentScreen=" + currentScreen + " / invite=" + (invite ? invite.inviterName : "なし") + " / invitePopup要素=" + (els.invitePopup ? "あり" : "なし"));
+
     // ゲーム中は絶対に出さない。誘いが無ければ出さない。
     if (!invite || currentScreen === "game") {
         els.invitePopup.classList.remove("show");
