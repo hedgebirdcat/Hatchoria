@@ -301,7 +301,17 @@ window.addEventListener("DOMContentLoaded", () => {
 // 対戦の誘い・拒否通知をリアルタイムで監視し始める
 window.addEventListener("hatchoria:playerReady", () => {
 
+    // 診断用: 監視が実際に開始されたことを確認する
+    console.log("診断: 対戦の誘いのリアルタイム監視を開始しました");
+
+    let firstSnapshot = true;
+
     listenIncomingMatchInvites((invites) => {
+
+        if (!firstSnapshot && invites.length > 0) {
+            alert("診断: 新しい対戦の誘いを受信しました(" + invites.length + "件)");
+        }
+        firstSnapshot = false;
 
         incomingInvites = invites;
         updateGlobalInvitePopup();
