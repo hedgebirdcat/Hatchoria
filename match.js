@@ -24,6 +24,19 @@ import {
 
 let els = {};
 
+// 診断用: alertの代わりに画面上部に文字を出す(iPadのSafariで
+// alertが連続すると抑制されることがあるための回避策)
+function debugLog(text) {
+
+    const banner = document.getElementById("debug-banner");
+    if (!banner) return;
+
+    const time = new Date().toLocaleTimeString();
+    banner.style.display = "block";
+    banner.innerText = "[" + time + "] " + text;
+
+}
+
 // 現在届いている pending の誘い一覧(リアルタイム監視の結果)
 let incomingInvites = [];
 
@@ -106,7 +119,7 @@ function updateGlobalInvitePopup() {
     const invite = incomingInvites[0];
 
     // 診断用: 判定に使っている値を直接確認する
-    alert("診断: currentScreen=" + currentScreen + " / invite=" + (invite ? invite.inviterName : "なし") + " / invitePopup要素=" + (els.invitePopup ? "あり" : "なし"));
+    debugLog("updateGlobalInvitePopup 実行: currentScreen=" + currentScreen + " / invite=" + (invite ? invite.inviterName : "なし") + " / invitePopup要素=" + (els.invitePopup ? "あり" : "なし"));
 
     // ゲーム中は絶対に出さない。誘いが無ければ出さない。
     if (!invite || currentScreen === "game") {
@@ -312,7 +325,7 @@ window.addEventListener("hatchoria:playerReady", () => {
     listenIncomingMatchInvites((invites) => {
 
         if (!firstSnapshot && invites.length > 0) {
-            alert("診断: 新しい対戦の誘いを受信しました(" + invites.length + "件)");
+            debugLog("新しい対戦の誘いを受信(" + invites.length + "件)");
         }
         firstSnapshot = false;
 
@@ -322,7 +335,7 @@ window.addEventListener("hatchoria:playerReady", () => {
 
     }, (error) => {
 
-        alert("診断: 対戦の誘いの監視でエラー: " + (error && (error.code || error.message)));
+        debugLog("対戦の誘いの監視でエラー: " + (error && (error.code || error.message)));
 
     });
 
@@ -342,7 +355,7 @@ window.addEventListener("hatchoria:playerReady", () => {
 
     }, (error) => {
 
-        alert("診断: 拒否通知の監視でエラー: " + (error && (error.code || error.message)));
+        debugLog("拒否通知の監視でエラー: " + (error && (error.code || error.message)));
 
     });
 
