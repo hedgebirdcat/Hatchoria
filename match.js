@@ -20,28 +20,9 @@ import {
     deleteMatch,
     listenIncomingMatchInvites,
     listenDeclinedMatches
-} from "./gameFirebase.js?v=2";
+} from "./gameFirebase.js";
 
 let els = {};
-
-// 診断用: alertの代わりに画面上部に文字を出す(iPadのSafariで
-// alertが連続すると抑制されることがあるための回避策)
-function debugLog(text) {
-
-    const banner = document.getElementById("debug-banner");
-    if (!banner) return;
-
-    const time = new Date().toLocaleTimeString();
-    banner.style.display = "block";
-    banner.innerText = "[" + time + "] " + text + "\n" + banner.innerText;
-
-    // 長くなりすぎないように直近10件だけ残す
-    const lines = banner.innerText.split("\n");
-    if (lines.length > 10) {
-        banner.innerText = lines.slice(0, 10).join("\n");
-    }
-
-}
 
 // 現在届いている pending の誘い一覧(リアルタイム監視の結果)
 let incomingInvites = [];
@@ -124,17 +105,12 @@ function updateGlobalInvitePopup() {
     const currentScreen = window.HatchoriaNav?.getCurrentScreen();
     const invite = incomingInvites[0];
 
-    // 診断用: 判定に使っている値を直接確認する
-    debugLog("updateGlobalInvitePopup 実行: currentScreen=" + currentScreen + " / invite=" + (invite ? invite.inviterName : "なし") + " / invitePopup要素=" + (els.invitePopup ? "あり" : "なし"));
-
     // ゲーム中は絶対に出さない。誘いが無ければ出さない。
     if (!invite || currentScreen === "game") {
-        debugLog("ポップアップ非表示: invite無し=" + !invite + " / game中=" + (currentScreen === "game"));
         els.invitePopup.classList.remove("show");
         return;
     }
 
-    debugLog("ポップアップ表示処理を実行します");
     els.invitePopupName.innerText = invite.inviterName || "プレイヤー";
     els.invitePopup.classList.add("show");
 
@@ -325,35 +301,15 @@ window.addEventListener("DOMContentLoaded", () => {
 // 対戦の誘い・拒否通知をリアルタイムで監視し始める
 window.addEventListener("hatchoria:playerReady", () => {
 
-    // 診断用: 監視が実際に開始されたことを確認する
-    debugLog("対戦の誘いのリアルタイム監視を開始");
-
-    let firstSnapshot = true;
-
     listenIncomingMatchInvites((invites) => {
 
-        try {
-
-            if (!firstSnapshot && invites.length > 0) {
-                debugLog("新しい対戦の誘いを受信(" + invites.length + "件)");
-            }
-            firstSnapshot = false;
-
-            incomingInvites = invites;
-            debugLog("updateGlobalInvitePopupを呼び出します(直前ログ)");
-            updateGlobalInvitePopup();
-            debugLog("updateGlobalInvitePopupの呼び出しが完了しました(直後ログ)");
-            renderInvitesList();
-
-        } catch (e) {
-
-            debugLog("callback内で例外発生: " + (e && e.message));
-
-        }
+        incomingInvites = invites;
+        updateGlobalInvitePopup();
+        renderInvitesList();
 
     }, (error) => {
 
-        debugLog("対戦の誘いの監視でエラー: " + (error && (error.code || error.message)));
+        console.error("対戦の誘いの監視でエラーが発生しました", error);
 
     });
 
@@ -373,7 +329,7 @@ window.addEventListener("hatchoria:playerReady", () => {
 
     }, (error) => {
 
-        debugLog("拒否通知の監視でエラー: " + (error && (error.code || error.message)));
+        console.error("拒否通知の監視でエラーが発生しました", error);
 
     });
 
