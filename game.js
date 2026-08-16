@@ -5,7 +5,7 @@
 // クイズゲーム本体
 // ======================================
 
-import { auth } from "./firebase.js";
+import { auth } from "./firebase.js?v=2";
 
 import {
     onAuthStateChanged
@@ -15,9 +15,9 @@ import {
     loadSaveData,
     saveGame,
     getPlayerData
-} from "./save.js";
+} from "./save.js?v=2";
 
-import { registerFriendCode } from "./gameFirebase.js";
+import { registerFriendCode } from "./gameFirebase.js?v=2";
 
 // ======================================
 // 単語データ (実験用に3単語のみ)
