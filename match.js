@@ -33,7 +33,13 @@ function debugLog(text) {
 
     const time = new Date().toLocaleTimeString();
     banner.style.display = "block";
-    banner.innerText = "[" + time + "] " + text;
+    banner.innerText = "[" + time + "] " + text + "\n" + banner.innerText;
+
+    // 長くなりすぎないように直近10件だけ残す
+    const lines = banner.innerText.split("\n");
+    if (lines.length > 10) {
+        banner.innerText = lines.slice(0, 10).join("\n");
+    }
 
 }
 
@@ -123,10 +129,12 @@ function updateGlobalInvitePopup() {
 
     // ゲーム中は絶対に出さない。誘いが無ければ出さない。
     if (!invite || currentScreen === "game") {
+        debugLog("ポップアップ非表示: invite無し=" + !invite + " / game中=" + (currentScreen === "game"));
         els.invitePopup.classList.remove("show");
         return;
     }
 
+    debugLog("ポップアップ表示処理を実行します");
     els.invitePopupName.innerText = invite.inviterName || "プレイヤー";
     els.invitePopup.classList.add("show");
 
@@ -318,7 +326,7 @@ window.addEventListener("DOMContentLoaded", () => {
 window.addEventListener("hatchoria:playerReady", () => {
 
     // 診断用: 監視が実際に開始されたことを確認する
-    console.log("診断: 対戦の誘いのリアルタイム監視を開始しました");
+    debugLog("対戦の誘いのリアルタイム監視を開始");
 
     let firstSnapshot = true;
 
