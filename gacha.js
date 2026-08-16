@@ -9,7 +9,7 @@
 // (game.js やホーム画面と同じデータを共有しているので、
 //  ガチャで使ったコインは他の画面にもすぐ反映される)
 
-import { getPlayerData, saveGame } from "./save.js?v=2";
+import { getPlayerData, saveGame } from "./save.js";
 
 const rewards = [
     { name: "賢者の石 🪨",     icon: "🪨", rarity: "ULTRA",     cssClass: "item-ultra",     tagClass: "tag-ultra" },
