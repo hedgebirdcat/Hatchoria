@@ -8,8 +8,8 @@
 // Firestore上のプレイヤーデータ(accountName / friendCode)を
 // そのまま読み書きする。ここではローカルの username/usercode は持たない。
 
-import { getPlayerData, saveGame } from "./save.js";
-import { registerFriendCode } from "./gameFirebase.js";
+import { getPlayerData, saveGame } from "./save.js?v=2";
+import { registerFriendCode } from "./gameFirebase.js?v=2";
 
 const DEFAULT_MONSTER = "leaf";
 const DEFAULT_GOAL = 50;
