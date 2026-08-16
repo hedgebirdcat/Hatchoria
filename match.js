@@ -332,14 +332,24 @@ window.addEventListener("hatchoria:playerReady", () => {
 
     listenIncomingMatchInvites((invites) => {
 
-        if (!firstSnapshot && invites.length > 0) {
-            debugLog("新しい対戦の誘いを受信(" + invites.length + "件)");
-        }
-        firstSnapshot = false;
+        try {
 
-        incomingInvites = invites;
-        updateGlobalInvitePopup();
-        renderInvitesList();
+            if (!firstSnapshot && invites.length > 0) {
+                debugLog("新しい対戦の誘いを受信(" + invites.length + "件)");
+            }
+            firstSnapshot = false;
+
+            incomingInvites = invites;
+            debugLog("updateGlobalInvitePopupを呼び出します(直前ログ)");
+            updateGlobalInvitePopup();
+            debugLog("updateGlobalInvitePopupの呼び出しが完了しました(直後ログ)");
+            renderInvitesList();
+
+        } catch (e) {
+
+            debugLog("callback内で例外発生: " + (e && e.message));
+
+        }
 
     }, (error) => {
 
