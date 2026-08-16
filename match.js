@@ -20,7 +20,7 @@ import {
     deleteMatch,
     listenIncomingMatchInvites,
     listenDeclinedMatches
-} from "./gameFirebase.js";
+} from "./gameFirebase.js?v=2";
 
 let els = {};
 
