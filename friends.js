@@ -8,7 +8,7 @@
 // フレンドのプロフィール表示は friend-profile-screen(独立画面、
 // screenNav.js が管理)を使う。
 
-import { getPlayerData } from "./save.js";
+import { getPlayerData } from "./save.js?v=2";
 
 import {
     findByFriendCode,
@@ -17,7 +17,7 @@ import {
     getIncomingRequests,
     getFriends,
     getFriendPublicData
-} from "./gameFirebase.js";
+} from "./gameFirebase.js?v=2";
 
 let els = {};
 
