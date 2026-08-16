@@ -27,6 +27,8 @@ const SCREENS = {
     match:         document.getElementById("match-screen")
 };
 
+let currentScreen = "home";
+
 function showScreen(name) {
 
     Object.values(SCREENS).forEach((el) => {
@@ -36,6 +38,13 @@ function showScreen(name) {
     if (SCREENS[name]) {
         SCREENS[name].style.display = "block";
     }
+
+    currentScreen = name;
+
+    // match.js など、画面によって表示を変えたい他のファイルへ通知する
+    window.dispatchEvent(new CustomEvent("hatchoria:screenChanged", {
+        detail: { screen: name }
+    }));
 
 }
 
@@ -49,7 +58,11 @@ function goHome() {
 }
 
 // friends.js など他のファイルから画面遷移を呼べるように公開する
-window.HatchoriaNav = { showScreen, goHome };
+window.HatchoriaNav = {
+    showScreen,
+    goHome,
+    getCurrentScreen: () => currentScreen
+};
 
 // ホーム → アドベンチャー選択画面
 document.querySelector(".adventure")
