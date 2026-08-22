@@ -11,6 +11,8 @@
 // (ゲーム画面以外なら)ポップアップで通知する。
 // 申し込んだ側も、相手に拒否されたらポップアップで知らされる。
 
+import { auth } from "./firebase.js";
+
 import {
     getFriends,
     getFriendPublicData,
@@ -19,8 +21,24 @@ import {
     declineMatchInvite,
     deleteMatch,
     listenIncomingMatchInvites,
-    listenDeclinedMatches
+    listenDeclinedMatches,
+    listenMyActiveMatches,
+    listenToMatch,
+    selectMatchQuestionCount,
+    startMatch,
+    updateMatchProgress,
+    finalizeMatchResult
 } from "./gameFirebase.js";
+
+// 対戦で出題する単語(通常のクイズと同じ3単語)
+const MATCH_QUIZ_DATA = [
+    { q: "apple", a: ["りんご", "リンゴ", "林檎"] },
+    { q: "sun",   a: ["太陽", "たいよう"] },
+    { q: "water", a: ["水", "みず"] }
+];
+
+const WRONG_PENALTY_MS = 5000;   // 1問間違えるごとのペナルティ
+const FORFEIT_WAIT_MS = 15000;   // 相手を待つ猶予時間(この間に終わらなければ不戦勝)
 
 let els = {};
 
@@ -29,6 +47,16 @@ let incomingInvites = [];
 
 // まだ通知していない「拒否された」マッチのキュー
 let declinedQueue = [];
+
+// 現在参加している進行中の対戦(あれば1件)
+let activeMatchId = null;
+let activeMatchUnsubscribe = null;
+
+// このIDの対戦では、もうカウントダウンを表示し終えたか
+let countdownShownFor = null;
+
+// 今の問題にすでに回答したか(連打・二重送信の防止)
+let answeredThisQuestion = false;
 
 function cacheElements() {
 
@@ -44,7 +72,32 @@ function cacheElements() {
 
         declinedPopup: document.getElementById("match-declined-popup"),
         declinedMessage: document.getElementById("match-declined-popup-message"),
-        declinedOkBtn: document.getElementById("match-declined-ok-btn")
+        declinedOkBtn: document.getElementById("match-declined-ok-btn"),
+
+        myScore: document.getElementById("match-my-score"),
+        opponentName: document.getElementById("match-opponent-name"),
+        opponentScore: document.getElementById("match-opponent-score"),
+        questionCounter: document.getElementById("match-question-counter"),
+        qDisplay: document.getElementById("match-q-display"),
+        ansInput: document.getElementById("match-ans-input"),
+        checkBtn: document.getElementById("match-check-btn"),
+        waitingMessage: document.getElementById("match-waiting-message"),
+
+        opponentStatus: document.getElementById("match-opponent-status"),
+        selectPhase: document.getElementById("match-select-phase"),
+        selectBtns: Array.from(document.querySelectorAll(".match-select-btn")),
+        selectMessage: document.getElementById("match-select-message"),
+        gameHeader: document.querySelector(".match-game-header"),
+        gameStage: document.querySelector(".match-game-stage"),
+
+        countdownOverlay: document.getElementById("match-countdown-overlay"),
+        countdownNumber: document.getElementById("match-countdown-number"),
+
+        resultOverlay: document.getElementById("match-result-overlay"),
+        resultTitle: document.getElementById("match-result-title"),
+        resultMyScore: document.getElementById("match-result-my-score"),
+        resultOpponentScore: document.getElementById("match-result-opponent-score"),
+        resultHomeBtn: document.getElementById("match-result-home-btn")
     };
 
 }
@@ -86,7 +139,6 @@ function openMatchScreen() {
 async function respondAccept(invite) {
 
     await acceptMatchInvite(invite.id);
-    alert(`${invite.inviterName}さんとの対戦が始まります！(対戦ゲーム本体は近日実装予定です)`);
 
 }
 
@@ -242,6 +294,423 @@ async function renderFriendsForInvite() {
 }
 
 // ======================================
+// 対戦本体(問題数選択 → 自分のペースで解答 → タイム勝負)
+// ======================================
+
+let currentMatchSnapshot = null;
+
+// 自分側の進行状況(ローカルで先行して持ち、Firestoreには報告用に送る)
+let myLocalIndex = 0;
+let myWrongCount = 0;
+let myFinished = false;
+let myEffectiveMs = null;
+
+let startMatchCalled = false;
+let forfeitTimer = null;
+let finalizeCalled = false;
+
+function enterMatch(matchId) {
+
+    if (activeMatchId === matchId) return; // すでに入室済み
+
+    activeMatchId = matchId;
+    countdownShownFor = null;
+    myLocalIndex = 0;
+    myWrongCount = 0;
+    myFinished = false;
+    myEffectiveMs = null;
+    startMatchCalled = false;
+    finalizeCalled = false;
+
+    if (forfeitTimer) {
+        clearTimeout(forfeitTimer);
+        forfeitTimer = null;
+    }
+
+    window.HatchoriaNav?.showScreen("matchGame");
+
+    activeMatchUnsubscribe = listenToMatch(matchId, (match) => {
+
+        currentMatchSnapshot = match;
+        renderMatchState(match);
+
+    }, (error) => {
+
+        console.error("対戦の監視でエラーが発生しました", error);
+
+    });
+
+}
+
+function exitMatch() {
+
+    if (activeMatchUnsubscribe) {
+        activeMatchUnsubscribe();
+        activeMatchUnsubscribe = null;
+    }
+
+    if (forfeitTimer) {
+        clearTimeout(forfeitTimer);
+        forfeitTimer = null;
+    }
+
+    activeMatchId = null;
+    currentMatchSnapshot = null;
+    countdownShownFor = null;
+
+    els.countdownOverlay.classList.remove("show");
+    els.resultOverlay.classList.remove("show");
+    els.waitingMessage.classList.remove("show");
+    els.selectPhase.classList.remove("show");
+    els.opponentStatus.classList.remove("show");
+    els.gameHeader.classList.remove("show");
+    els.gameStage.classList.remove("show");
+
+}
+
+function myUid() {
+    return auth.currentUser ? auth.currentUser.uid : null;
+}
+
+function isInviter(match) {
+    return match.inviterUid === myUid();
+}
+
+function renderMatchState(match) {
+
+    if (!match || match.status === "declined") {
+        exitMatch();
+        return;
+    }
+
+    const iAmInviter = isInviter(match);
+    const opponentName = iAmInviter ? match.opponentName : match.inviterName;
+    els.opponentName.innerText = opponentName || "相手";
+
+    if (match.status === "selecting") {
+
+        renderSelectPhase(match, iAmInviter, opponentName);
+        return;
+
+    }
+
+    els.selectPhase.classList.remove("show");
+
+    if (match.status === "active") {
+
+        renderActivePhase(match, iAmInviter, opponentName);
+        return;
+
+    }
+
+    if (match.status === "finished") {
+
+        showMatchResult(match, iAmInviter, opponentName);
+
+    }
+
+}
+
+// ======================================
+// フェーズ1: 問題数の選択
+// ======================================
+
+function renderSelectPhase(match, iAmInviter, opponentName) {
+
+    els.gameHeader.classList.remove("show");
+    els.gameStage.classList.remove("show");
+    els.selectPhase.classList.add("show");
+
+    const myCount = iAmInviter ? match.inviterQuestionCount : match.opponentQuestionCount;
+    const opponentCount = iAmInviter ? match.opponentQuestionCount : match.inviterQuestionCount;
+
+    els.selectBtns.forEach((btn) => {
+        btn.classList.toggle("selected", Number(btn.dataset.count) === myCount);
+    });
+
+    if (opponentCount) {
+
+        els.opponentStatus.innerText = `${opponentName || "相手"}は${opponentCount}問を選択しました`;
+        els.opponentStatus.classList.add("show");
+
+    } else {
+
+        els.opponentStatus.classList.remove("show");
+
+    }
+
+    if (myCount && opponentCount) {
+
+        if (myCount === opponentCount) {
+
+            els.selectMessage.style.color = "#2e7d32";
+            els.selectMessage.innerText = "選択が一致しました！まもなく開始します…";
+
+            if (!startMatchCalled) {
+
+                startMatchCalled = true;
+
+                const questions = generateMatchQuestions(myCount);
+                startMatch(match.id, questions, myCount);
+
+            }
+
+        } else {
+
+            els.selectMessage.style.color = "#e53935";
+            els.selectMessage.innerText = `${opponentName || "相手"}との選択が一致しません`;
+
+        }
+
+    } else {
+
+        els.selectMessage.style.color = "#555";
+        els.selectMessage.innerText = myCount ? "相手の選択を待っています…" : "";
+
+    }
+
+}
+
+function generateMatchQuestions(count) {
+
+    const list = [];
+
+    for (let i = 0; i < count; i++) {
+        list.push(MATCH_QUIZ_DATA[Math.floor(Math.random() * MATCH_QUIZ_DATA.length)]);
+    }
+
+    return list;
+
+}
+
+// ======================================
+// フェーズ2: 自分のペースで解答する
+// ======================================
+
+function renderActivePhase(match, iAmInviter, opponentName) {
+
+    els.selectPhase.classList.remove("show");
+    els.gameHeader.classList.add("show");
+    els.gameStage.classList.add("show");
+
+    const myProgress = iAmInviter ? match.inviterProgress : match.opponentProgress;
+    const opponentProgress = iAmInviter ? match.opponentProgress : match.inviterProgress;
+    const totalCount = match.questionCount;
+
+    // カウントダウン(このマッチで最初の1回だけ)
+    if (countdownShownFor !== match.id) {
+
+        countdownShownFor = match.id;
+        playCountdown();
+
+    }
+
+    // 自分の表示(ローカルの進行状況を優先して即応性を出す)
+    els.myScore.innerText = `${myLocalIndex}問`;
+    els.questionCounter.innerText = `${Math.min(myLocalIndex + 1, totalCount)}/${totalCount}`;
+
+    // 相手の進行状況(右上に表示)
+    if (opponentProgress && opponentProgress.finishedAt) {
+
+        els.opponentStatus.innerText = `${opponentName || "相手"}は解答を終えました！`;
+        els.opponentStatus.classList.add("show");
+
+    } else if (opponentProgress && opponentProgress.currentIndex > 0) {
+
+        els.opponentStatus.innerText = `${opponentName || "相手"}：${opponentProgress.currentIndex}/${totalCount}`;
+        els.opponentStatus.classList.add("show");
+
+    } else {
+
+        els.opponentStatus.classList.remove("show");
+
+    }
+
+    els.opponentScore.innerText = `${opponentProgress ? opponentProgress.currentIndex : 0}問`;
+
+    if (myFinished) {
+
+        els.qDisplay.innerText = "";
+        els.ansInput.disabled = true;
+        els.checkBtn.disabled = true;
+        els.waitingMessage.classList.add("show");
+
+        // 相手も終わっていたら勝敗を確定する(どちらが呼んでも結果は同じ)
+        if (opponentProgress && opponentProgress.finishedAt && !finalizeCalled) {
+
+            finalizeCalled = true;
+            finalizeWinner(match, myEffectiveMs, opponentProgress.effectiveMs, iAmInviter);
+
+        }
+
+    } else {
+
+        const question = match.questions[myLocalIndex];
+
+        els.qDisplay.innerText = question.q + " の意味は？";
+        els.ansInput.disabled = false;
+        els.checkBtn.disabled = false;
+        els.waitingMessage.classList.remove("show");
+
+    }
+
+}
+
+function playCountdown() {
+
+    const steps = ["3", "2", "1", "START"];
+    let i = 0;
+
+    els.countdownOverlay.classList.add("show");
+    els.countdownNumber.innerText = steps[i];
+
+    const timer = setInterval(() => {
+
+        i++;
+
+        if (i >= steps.length) {
+            clearInterval(timer);
+            els.countdownOverlay.classList.remove("show");
+            return;
+        }
+
+        els.countdownNumber.innerText = steps[i];
+
+    }, 700);
+
+}
+
+async function handleMatchCheck() {
+
+    if (myFinished) return;
+
+    const match = currentMatchSnapshot;
+    if (!match || match.status !== "active") return;
+
+    const value = els.ansInput.value.trim();
+    if (!value) return;
+
+    const question = match.questions[myLocalIndex];
+    const correct = question.a.includes(value);
+
+    if (!correct) {
+        myWrongCount++;
+    }
+
+    myLocalIndex++;
+    els.ansInput.value = "";
+
+    const iAmInviter = isInviter(match);
+
+    if (myLocalIndex >= match.questionCount) {
+
+        // 全問解き終えた
+        myFinished = true;
+
+        const finishedAt = Date.now();
+        myEffectiveMs = (finishedAt - match.startedAt) + (myWrongCount * WRONG_PENALTY_MS);
+
+        await updateMatchProgress(match.id, iAmInviter, {
+            currentIndex: myLocalIndex,
+            wrongCount: myWrongCount,
+            finishedAt: finishedAt,
+            effectiveMs: myEffectiveMs
+        });
+
+        startForfeitTimer(match, iAmInviter);
+
+    } else {
+
+        await updateMatchProgress(match.id, iAmInviter, {
+            currentIndex: myLocalIndex,
+            wrongCount: myWrongCount,
+            finishedAt: null,
+            effectiveMs: null
+        });
+
+        renderMatchState(match);
+
+    }
+
+}
+
+// 自分が先に終えた場合、猶予時間を過ぎても相手が終わらなければ不戦勝にする
+function startForfeitTimer(match, iAmInviter) {
+
+    if (forfeitTimer) clearTimeout(forfeitTimer);
+
+    forfeitTimer = setTimeout(() => {
+
+        if (finalizeCalled) return;
+
+        const latest = currentMatchSnapshot;
+        if (!latest || latest.status !== "active") return;
+
+        const opponentProgress = iAmInviter ? latest.opponentProgress : latest.inviterProgress;
+
+        if (!opponentProgress || !opponentProgress.finishedAt) {
+
+            finalizeCalled = true;
+            finalizeMatchResult(match.id, myUid());
+
+        }
+
+    }, FORFEIT_WAIT_MS);
+
+}
+
+// 両者の完答タイムを比べて勝者を決める(どちらが呼んでも同じ結果)
+function finalizeWinner(match, myMs, opponentMs, iAmInviter) {
+
+    let winner = null;
+
+    if (myMs < opponentMs) {
+        winner = myUid();
+    } else if (opponentMs < myMs) {
+        winner = iAmInviter ? match.opponentUid : match.inviterUid;
+    }
+    // 同着の場合は winner を null のまま(引き分け)にする
+
+    finalizeMatchResult(match.id, winner);
+
+}
+
+function formatSeconds(ms) {
+
+    if (ms === null || ms === undefined) return "-";
+    return (ms / 1000).toFixed(1) + "秒";
+
+}
+
+function showMatchResult(match, iAmInviter, opponentName) {
+
+    if (forfeitTimer) {
+        clearTimeout(forfeitTimer);
+        forfeitTimer = null;
+    }
+
+    const myProgress = iAmInviter ? match.inviterProgress : match.opponentProgress;
+    const opponentProgress = iAmInviter ? match.opponentProgress : match.inviterProgress;
+
+    let title = "引き分け";
+
+    if (match.winner) {
+        title = match.winner === myUid() ? "勝利！" : "敗北…";
+    }
+
+    els.resultTitle.innerText = title;
+    els.resultMyScore.innerText = `あなた：${formatSeconds(myProgress ? myProgress.effectiveMs : null)}`;
+    els.resultOpponentScore.innerText = `${opponentName || "相手"}：${formatSeconds(opponentProgress ? opponentProgress.effectiveMs : null)}`;
+
+    els.countdownOverlay.classList.remove("show");
+    els.opponentStatus.classList.remove("show");
+    els.gameHeader.classList.remove("show");
+    els.gameStage.classList.remove("show");
+    els.resultOverlay.classList.add("show");
+
+}
+
+// ======================================
 // 初期化
 // ======================================
 
@@ -292,6 +761,35 @@ window.addEventListener("DOMContentLoaded", () => {
 
     });
 
+    els.checkBtn.addEventListener("click", handleMatchCheck);
+
+    els.selectBtns.forEach((btn) => {
+
+        btn.addEventListener("click", async () => {
+
+            const match = currentMatchSnapshot;
+            if (!match) return;
+
+            const count = Number(btn.dataset.count);
+            await selectMatchQuestionCount(match.id, isInviter(match), count);
+
+        });
+
+    });
+
+    els.resultHomeBtn.addEventListener("click", async () => {
+
+        const finishedMatchId = activeMatchId;
+        exitMatch();
+
+        if (finishedMatchId) {
+            await deleteMatch(finishedMatchId);
+        }
+
+        window.dispatchEvent(new Event("hatchoria:requestHome"));
+
+    });
+
     // 画面が切り替わるたびに、通知ポップアップを出すべきか判定し直す
     window.addEventListener("hatchoria:screenChanged", updateGlobalInvitePopup);
 
@@ -330,6 +828,24 @@ window.addEventListener("hatchoria:playerReady", () => {
     }, (error) => {
 
         console.error("拒否通知の監視でエラーが発生しました", error);
+
+    });
+
+    // 自分が関わっている「選択中・進行中」の対戦を検知したら、
+    // (招待した側・された側どちらでも)自動的に対戦画面に入る
+    listenMyActiveMatches((matches) => {
+
+        if (matches.length === 0) return;
+
+        const match = matches[0];
+
+        if (activeMatchId !== match.id) {
+            enterMatch(match.id);
+        }
+
+    }, (error) => {
+
+        console.error("進行中の対戦の監視でエラーが発生しました", error);
 
     });
 
