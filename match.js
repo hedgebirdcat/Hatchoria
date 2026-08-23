@@ -383,6 +383,12 @@ function renderMatchState(match) {
         return;
     }
 
+    if (match.status === "active" && (!Array.isArray(match.questions) || !match.inviterProgress || !match.opponentProgress)) {
+        // 壊れた/古い形式のデータは処理せず抜ける
+        exitMatch();
+        return;
+    }
+
     const iAmInviter = isInviter(match);
     const opponentName = iAmInviter ? match.opponentName : match.inviterName;
     els.opponentName.innerText = opponentName || "相手";
@@ -837,7 +843,31 @@ window.addEventListener("hatchoria:playerReady", () => {
 
         if (matches.length === 0) return;
 
-        const match = matches[0];
+        // 古い形式で壊れているデータ(以前のテストの残骸等)は
+        // 自動入室せず、片付けてしまう
+        const valid = matches.filter((m) => {
+
+            if (m.status === "selecting") return true;
+
+            if (m.status === "active") {
+                return Array.isArray(m.questions) && m.inviterProgress && m.opponentProgress;
+            }
+
+            return false;
+
+        });
+
+        matches.forEach((m) => {
+
+            if (!valid.includes(m)) {
+                deleteMatch(m.id).catch(() => {});
+            }
+
+        });
+
+        if (valid.length === 0) return;
+
+        const match = valid[0];
 
         if (activeMatchId !== match.id) {
             enterMatch(match.id);
