@@ -392,11 +392,61 @@ export async function getIncomingMatchInvites() {
 
 }
 
-// 対戦の誘いを承認する
+// 対戦の誘いを承認する(まず「問題数の選択フェーズ」に入る)
 export async function acceptMatchInvite(matchId) {
 
     const ref = doc(db, "matches", matchId);
-    await updateDoc(ref, { status: "active" });
+
+    await updateDoc(ref, {
+        status: "selecting",
+        inviterQuestionCount: null,
+        opponentQuestionCount: null,
+        inviterProgress: { currentIndex: 0, wrongCount: 0, finishedAt: null, effectiveMs: null },
+        opponentProgress: { currentIndex: 0, wrongCount: 0, finishedAt: null, effectiveMs: null }
+    });
+
+}
+
+// 問題数を選択する(自分の欄だけを書き込む)
+export async function selectMatchQuestionCount(matchId, isInviter, count) {
+
+    const ref = doc(db, "matches", matchId);
+    const field = isInviter ? "inviterQuestionCount" : "opponentQuestionCount";
+
+    await updateDoc(ref, { [field]: count });
+
+}
+
+// 選択が一致したら対戦を開始する(招待した側だけが呼ぶ想定。
+// 両者が同時に問題セットを生成して食い違うのを防ぐため)
+export async function startMatch(matchId, questions, questionCount) {
+
+    const ref = doc(db, "matches", matchId);
+
+    await updateDoc(ref, {
+        status: "active",
+        questions: questions,
+        questionCount: questionCount,
+        startedAt: Date.now()
+    });
+
+}
+
+// 自分の進行状況(現在の問題番号・ミス数)を書き込む
+export async function updateMatchProgress(matchId, isInviter, progress) {
+
+    const ref = doc(db, "matches", matchId);
+    const field = isInviter ? "inviterProgress" : "opponentProgress";
+
+    await updateDoc(ref, { [field]: progress });
+
+}
+
+// 対戦の結果(勝者)を確定させる
+export async function finalizeMatchResult(matchId, winner) {
+
+    const ref = doc(db, "matches", matchId);
+    await updateDoc(ref, { status: "finished", winner: winner });
 
 }
 
@@ -468,5 +518,77 @@ export function listenDeclinedMatches(callback, onError) {
         if (onError) onError(error);
 
     });
+
+}
+
+// ======================================
+// マッチ本体(同時に問題を解くゲーム部分)
+// ======================================
+
+// 1つの対戦をリアルタイムで監視する(問題・進行状況・回答すべて)
+export function listenToMatch(matchId, callback, onError) {
+
+    const ref = doc(db, "matches", matchId);
+
+    return onSnapshot(ref, (snap) => {
+
+        if (!snap.exists()) {
+            callback(null);
+            return;
+        }
+
+        callback({ id: snap.id, ...snap.data() });
+
+    }, (error) => {
+
+        console.error("対戦の監視でエラーが発生しました", error);
+        if (onError) onError(error);
+
+    });
+
+}
+
+// 自分が参加している「選択中・進行中」の対戦をリアルタイムで監視する
+// (招待した側・招待された側どちらでも検知できるよう2つ監視する)
+export function listenMyActiveMatches(callback, onError) {
+
+    const user = auth.currentUser;
+    if (!user) return () => {};
+
+    const unsubList = [];
+    let asInviter = [];
+    let asOpponent = [];
+
+    const notify = () => callback([...asInviter, ...asOpponent]);
+
+    const qInviter = query(
+        collection(db, "matches"),
+        where("inviterUid", "==", user.uid),
+        where("status", "in", ["selecting", "active"])
+    );
+
+    const qOpponent = query(
+        collection(db, "matches"),
+        where("opponentUid", "==", user.uid),
+        where("status", "in", ["selecting", "active"])
+    );
+
+    unsubList.push(onSnapshot(qInviter, (snap) => {
+        asInviter = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+        notify();
+    }, (error) => {
+        console.error("進行中の対戦(招待側)の監視でエラー", error);
+        if (onError) onError(error);
+    }));
+
+    unsubList.push(onSnapshot(qOpponent, (snap) => {
+        asOpponent = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+        notify();
+    }, (error) => {
+        console.error("進行中の対戦(参加側)の監視でエラー", error);
+        if (onError) onError(error);
+    }));
+
+    return () => unsubList.forEach((unsub) => unsub());
 
 }
