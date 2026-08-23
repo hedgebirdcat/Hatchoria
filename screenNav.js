@@ -24,7 +24,8 @@ const SCREENS = {
     game:          document.getElementById("game-screen"),
     gacha:         document.getElementById("gacha-screen"),
     friendProfile: document.getElementById("friend-profile-screen"),
-    match:         document.getElementById("match-screen")
+    match:         document.getElementById("match-screen"),
+    matchGame:     document.getElementById("match-game-screen")
 };
 
 let currentScreen = "home";
