@@ -42,22 +42,6 @@ const FORFEIT_WAIT_MS = 15000;   // 相手を待つ猶予時間(この間に終�
 
 let els = {};
 
-function debugLog(text) {
-
-    const banner = document.getElementById("debug-banner");
-    if (!banner) return;
-
-    const time = new Date().toLocaleTimeString();
-    banner.style.display = "block";
-    banner.innerText = "[" + time + "] " + text + "\n" + banner.innerText;
-
-    const lines = banner.innerText.split("\n");
-    if (lines.length > 10) {
-        banner.innerText = lines.slice(0, 10).join("\n");
-    }
-
-}
-
 // 現在届いている pending の誘い一覧(リアルタイム監視の結果)
 let incomingInvites = [];
 
@@ -141,13 +125,9 @@ function getMonsterImageSrc(monster, level) {
 
 function openMatchScreen() {
 
-    debugLog("マッチのダイヤモンドがクリックされました");
-    debugLog("HatchoriaNav = " + (window.HatchoriaNav ? "あり" : "なし"));
-
     try {
 
         window.HatchoriaNav?.showScreen("match");
-        debugLog("showScreen('match') 呼び出し完了");
 
         renderInvitesList();
         renderFriendsForInvite();
@@ -155,7 +135,6 @@ function openMatchScreen() {
     } catch (error) {
 
         console.error("マッチ画面を開けませんでした", error);
-        debugLog("マッチ画面エラー: " + (error && error.message));
 
     }
 
@@ -753,19 +732,15 @@ window.addEventListener("DOMContentLoaded", () => {
 
     try {
 
-    debugLog("match.js DOMContentLoaded 開始");
-
     cacheElements();
 
     if (!els.matchDiamond) {
 
-        debugLog("match-diamond要素が見つかりません(HTML未反映の可能性)");
         // マッチUIが存在しないページでは何もしない
         return;
 
     }
 
-    debugLog("match-diamond要素あり。クリックイベントを登録します");
     els.matchDiamond.addEventListener("click", openMatchScreen);
 
     // グローバル通知ポップアップのボタン
@@ -837,7 +812,6 @@ window.addEventListener("DOMContentLoaded", () => {
     } catch (error) {
 
         console.error("match.js 初期化エラー", error);
-        debugLog("match.js 初期化エラー: " + (error && error.message));
 
     }
 
