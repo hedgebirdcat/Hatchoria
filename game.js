@@ -18,6 +18,7 @@ import {
 } from "./save.js";
 
 import { registerFriendCode } from "./gameFirebase.js";
+import { getEquippedBonus } from "./equipment.js";
 
 // ======================================
 // 単語データ (実験用に3単語のみ)
@@ -217,6 +218,9 @@ window.addEventListener("DOMContentLoaded", () => {
             }
             if (!player.nameChangeCount) {
                 player.nameChangeCount = 0;
+            }
+            if (player.equippedItemId === undefined) {
+                player.equippedItemId = null;
             }
 
             // リロード・再訪問時も前回のコンボを引き継げるように、
@@ -452,22 +456,29 @@ function handleCorrect() {
     player.combo = combo;
     correctAnswersCount++;
 
+    const bonus = getEquippedBonus(player);
+
     const comboBonus = Math.floor(combo / COMBO_BONUS_STEP) * COMBO_BONUS_XP;
     let gainedXP = BASE_XP + comboBonus;
 
-    let popupText = `+${gainedXP} XP`;
     let isSpecialPopup = false;
 
     if (isBonusStage) {
 
         gainedXP += BONUS_XP;
-        popupText = `★BONUS★ +${gainedXP} XP`;
         isSpecialPopup = true;
 
+    }
+
+    // 装備中アイテムのXPボーナスを適用
+    gainedXP = Math.round(gainedXP * (1 + bonus.xpBonus));
+
+    let popupText = `+${gainedXP} XP`;
+
+    if (isBonusStage) {
+        popupText = `★BONUS★ +${gainedXP} XP`;
     } else if (combo % COMBO_BONUS_STEP === 0) {
-
         popupText += ` (🔥${combo}コンボ！)`;
-
     }
 
     player.exp += gainedXP;
@@ -475,14 +486,16 @@ function handleCorrect() {
 
     showXpPopup(popupText, isSpecialPopup);
 
-    // レベルアップ判定
+    // レベルアップ判定(コインにも装備ボーナスを適用)
+    const levelupCoinReward = Math.round(LEVELUP_COIN_REWARD * (1 + bonus.coinBonus));
+
     while (player.exp >= player.goal) {
 
         player.exp -= player.goal;
         player.level++;
         player.goal += 10;
-        player.coins += LEVELUP_COIN_REWARD;
-        roundCoinsEarned += LEVELUP_COIN_REWARD;
+        player.coins += levelupCoinReward;
+        roundCoinsEarned += levelupCoinReward;
 
     }
 
