@@ -167,7 +167,11 @@ function keepItem() {
         player.inventory = [];
     }
 
-    player.inventory.push(currentGachaReward.name);
+    player.inventory.push({
+        id: Date.now().toString(36) + Math.random().toString(36).slice(2, 8),
+        name: currentGachaReward.name,
+        level: 1
+    });
 
     els.mainBox.innerHTML = `
         <div class="gacha-result-msg" style="display:flex; flex-direction:column; align-items:center; justify-content:center;">
