@@ -161,7 +161,8 @@ export async function saveAll({
     combo,
     title,
     selfIntro,
-    nameChangeCount
+    nameChangeCount,
+    equippedItemId
 
 }) {
 
@@ -179,7 +180,8 @@ export async function saveAll({
         combo,
         title,
         selfIntro,
-        nameChangeCount
+        nameChangeCount,
+        equippedItemId
 
     });
 
