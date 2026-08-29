@@ -370,6 +370,15 @@
             font-size: 12px;
             color: #999;
         }
+        .equip-unequip-btn {
+            padding: 6px 14px;
+            border: none;
+            border-radius: 8px;
+            background: #b0bec5;
+            color: white;
+            font-weight: bold;
+            font-size: 12px;
+        }
         .friend-list-area {
             max-height: 26vh;
             overflow-y: auto;
@@ -1787,7 +1796,7 @@
 
             <div class="home-footer-menu">
                 <button id="home-gacha-btn" class="circle-menu-btn" data-label="ガチャ">📦</button>
-                <button class="circle-menu-btn dummy-btn" data-label="準備中">🔒</button>
+                <button id="home-equipment-btn" class="circle-menu-btn" data-label="装備">⚔️</button>
                 <button class="circle-menu-btn dummy-btn" data-label="準備中">🔒</button>
                 <button class="circle-menu-btn dummy-btn" data-label="準備中">🔒</button>
             </div>
@@ -1870,6 +1879,25 @@
                 <button id="gacha-convert-btn" class="gacha-choice-btn">コインに変換する</button>
                 <button id="gacha-keep-btn" class="gacha-choice-btn">所持する</button>
             </div>
+        </div>
+    </div>
+
+    <div id="equipment-overlay" class="game-overlay">
+        <div class="popup-card" style="border-color: #8e24aa; max-height: 82vh; overflow-y: auto;">
+            <div class="popup-title" style="color: #8e24aa;">⚔️ 装備</div>
+
+            <div class="profile-label">現在の装備</div>
+            <div id="equipment-current" class="friend-item-card">
+                <div class="friend-item-info">
+                    <div class="friend-item-name">なし</div>
+                    <div class="friend-item-level">効果なし</div>
+                </div>
+            </div>
+
+            <div class="profile-label" style="margin-top: 18px;">所持アイテム</div>
+            <div id="equipment-inventory-list" class="friend-list-area"></div>
+
+            <button id="equipment-close-btn" class="secondary-btn" style="margin-top: 18px;">戻る</button>
         </div>
     </div>
 
@@ -2039,6 +2067,7 @@
     <script type="module" src="screenNav.js?v=2"></script>
     <script type="module" src="game.js?v=2"></script>
     <script type="module" src="gacha.js?v=2"></script>
+    <script type="module" src="equipment.js?v=2"></script>
     <script type="module" src="profile.js?v=2"></script>
     <script type="module" src="friends.js?v=2"></script>
     <script type="module" src="match.js?v=2"></script>
