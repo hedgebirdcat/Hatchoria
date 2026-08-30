@@ -316,6 +316,7 @@ let myEffectiveMs = null;
 let startMatchCalled = false;
 let forfeitTimer = null;
 let finalizeCalled = false;
+let focusedForIndex = -1;
 
 function enterMatch(matchId) {
 
@@ -329,6 +330,7 @@ function enterMatch(matchId) {
     myEffectiveMs = null;
     startMatchCalled = false;
     finalizeCalled = false;
+    focusedForIndex = -1;
 
     if (forfeitTimer) {
         clearTimeout(forfeitTimer);
@@ -566,6 +568,13 @@ function renderActivePhase(match, iAmInviter, opponentName) {
         els.checkBtn.disabled = false;
         els.waitingMessage.classList.remove("show");
 
+        // 新しい問題に切り替わった時だけ自動でフォーカスする
+        // (毎回呼ぶと入力中にキーボードが再度出て邪魔になるため)
+        if (focusedForIndex !== myLocalIndex) {
+            focusedForIndex = myLocalIndex;
+            els.ansInput.focus();
+        }
+
     }
 
 }
@@ -779,6 +788,14 @@ window.addEventListener("DOMContentLoaded", () => {
 
     els.checkBtn.addEventListener("click", handleMatchCheck);
 
+    els.ansInput.addEventListener("keydown", (e) => {
+
+        if (e.key === "Enter") {
+            handleMatchCheck();
+        }
+
+    });
+
     els.selectBtns.forEach((btn) => {
 
         btn.addEventListener("click", async () => {
@@ -799,7 +816,15 @@ window.addEventListener("DOMContentLoaded", () => {
         exitMatch();
 
         if (finishedMatchId) {
-            await deleteMatch(finishedMatchId);
+
+            try {
+                await deleteMatch(finishedMatchId);
+            } catch (error) {
+                // 相手が先に削除済みなどで失敗しても、
+                // ホームに戻る操作自体は必ず成功させる
+                console.error("対戦データの削除に失敗しました", error);
+            }
+
         }
 
         window.dispatchEvent(new Event("hatchoria:requestHome"));
