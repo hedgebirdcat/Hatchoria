@@ -18,8 +18,7 @@ const rewards = [
     { name: "道化師の仮面 🎭", icon: "🎭", rarity: "COMMON",    cssClass: "item-common",    tagClass: "tag-common" }
 ];
 
-const GACHA_COST = 50;
-const CONVERT_REWARD = 10;
+const GACHA_COST = 500;
 
 let currentGachaReward = null;
 
@@ -32,7 +31,7 @@ function cacheElements() {
         mainBox: document.getElementById("gacha-main-box"),
         drawBtn: document.getElementById("gacha-draw-action-btn"),
         choiceContainer: document.getElementById("gacha-choice-container"),
-        convertBtn: document.getElementById("gacha-convert-btn"),
+        holdBtn: document.getElementById("gacha-hold-btn"),
         keepBtn: document.getElementById("gacha-keep-btn")
     };
 
@@ -127,28 +126,34 @@ function drawGacha() {
 }
 
 // ======================================
-// コインに変換する
+// 保留する(貯蔵庫に送る)
 // ======================================
 
-function convertToCoins() {
+function holdItem() {
 
     const player = getPlayerData();
 
     if (!currentGachaReward || !player) return;
 
-    player.coins += CONVERT_REWARD;
+    if (!player.storage) {
+        player.storage = [];
+    }
+
+    player.storage.push({
+        id: Date.now().toString(36) + Math.random().toString(36).slice(2, 8),
+        name: currentGachaReward.name,
+        level: 1
+    });
 
     els.mainBox.innerHTML = `
         <div class="gacha-result-msg">
-            🪙 コインに変換しました！<br>
-            <span style="color:#ff9800; font-size:22px;">+${CONVERT_REWARD} コイン</span>
+            🗄️ 貯蔵庫に保留しました
         </div>
     `;
 
     els.choiceContainer.style.display = "none";
     setTimeout(resetGachaState, 2500);
 
-    updateCoinDisplay();
     saveGame();
 
 }
@@ -207,7 +212,7 @@ window.addEventListener("DOMContentLoaded", () => {
     }
 
     els.drawBtn?.addEventListener("click", drawGacha);
-    els.convertBtn?.addEventListener("click", convertToCoins);
+    els.holdBtn?.addEventListener("click", holdItem);
     els.keepBtn?.addEventListener("click", keepItem);
 
 });
