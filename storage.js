@@ -143,7 +143,14 @@ async function obtainSelectedItem() {
         player.inventory = [];
     }
 
-    player.inventory.push(item);
+    const existing = player.inventory.find((it) => it.name === item.name);
+
+    if (existing) {
+        existing.duplicates = (existing.duplicates || 0) + 1;
+    } else {
+        if (item.duplicates === undefined) item.duplicates = 0;
+        player.inventory.push(item);
+    }
 
     await saveGame();
 
