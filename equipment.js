@@ -182,3 +182,6 @@ window.addEventListener("DOMContentLoaded", () => {
     els.closeBtn.addEventListener("click", closeEquipment);
 
 });
+
+// storage.js から「装備画面を開いてほしい」通知を受けたら開く
+window.addEventListener("hatchoria:openEquipment", openEquipment);
