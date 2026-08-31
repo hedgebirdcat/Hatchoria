@@ -204,6 +204,11 @@ window.addEventListener("DOMContentLoaded", () => {
                 player.inventory = [];
             }
 
+            // 貯蔵庫(保留中のアイテム)が未設定の場合は空配列にしておく
+            if (!player.storage) {
+                player.storage = [];
+            }
+
             // コンボが未設定の場合は0にしておく
             if (!player.combo) {
                 player.combo = 0;
