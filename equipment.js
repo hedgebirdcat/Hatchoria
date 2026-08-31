@@ -8,7 +8,6 @@ import { getPlayerData, saveGame } from "./save.js";
 
 // アイテムごとの効果(レベルに比例させておくことで、
 // 将来アイテムのレベルアップ機能を追加しても自然に対応できる)
-// 今はどのアイテムもlevel: 1なので、そのまま以下の数値が適用される。
 export const ITEM_EFFECTS = {
     "道化師の仮面 🎭": { coinBonus: 0.05, xpBonus: 0 },
     "神秘の果実 🍋":   { coinBonus: 0.02, xpBonus: 0.05 },
@@ -16,18 +15,35 @@ export const ITEM_EFFECTS = {
     "賢者の石 🪨":     { coinBonus: 0.20, xpBonus: 0.20 }
 };
 
-// 所持アイテムの1件を { id, name, level } の形に揃える
+const LEVELUP_COST = 100; // レベルアップに必要なコイン(被りがあれば消費して無料)
+const MILESTONE_STEP = 10;   // このレベルごとに追加効果
+const MILESTONE_BONUS = 0.01; // 追加効果の量(1%)
+
+// 所持アイテムの1件を { id, name, level, duplicates } の形に揃える
 // (以前はアイテム名の文字列だけを保存していたため、古いデータにも対応する)
 export function normalizeItem(item, index) {
 
     if (typeof item === "string") {
-        return { id: "legacy-" + index, name: item, level: 1 };
+        return { id: "legacy-" + index, name: item, level: 1, duplicates: 0 };
     }
 
     return {
         id: item.id || ("legacy-" + index),
         name: item.name,
-        level: item.level || 1
+        level: item.level || 1,
+        duplicates: item.duplicates || 0
+    };
+
+}
+
+// レベルとマイルストーン(10レベルごとに+1%)を踏まえた効果を計算する
+function calcBonus(base, level) {
+
+    const milestone = Math.floor(level / MILESTONE_STEP) * MILESTONE_BONUS;
+
+    return {
+        xpBonus: base.xpBonus * level + (base.xpBonus > 0 ? milestone : 0),
+        coinBonus: base.coinBonus * level + (base.coinBonus > 0 ? milestone : 0)
     };
 
 }
@@ -52,14 +68,12 @@ export function getEquippedBonus(player) {
         return { xpBonus: 0, coinBonus: 0 };
     }
 
-    return {
-        xpBonus: base.xpBonus * equipped.level,
-        coinBonus: base.coinBonus * equipped.level
-    };
+    return calcBonus(base, equipped.level);
 
 }
 
 let els = {};
+let selectedItemId = null;
 
 function cacheElements() {
 
@@ -68,7 +82,15 @@ function cacheElements() {
         overlay: document.getElementById("equipment-overlay"),
         closeBtn: document.getElementById("equipment-close-btn"),
         current: document.getElementById("equipment-current"),
-        inventoryList: document.getElementById("equipment-inventory-list")
+        inventoryList: document.getElementById("equipment-inventory-list"),
+
+        detailOverlay: document.getElementById("equipment-detail-overlay"),
+        detailName: document.getElementById("equipment-detail-name"),
+        detailEffect: document.getElementById("equipment-detail-effect"),
+        detailLevelupNote: document.getElementById("equipment-detail-levelup-note"),
+        detailLevelupBtn: document.getElementById("equipment-detail-levelup-btn"),
+        detailEquipBtn: document.getElementById("equipment-detail-equip-btn"),
+        detailCloseBtn: document.getElementById("equipment-detail-close-btn")
     };
 
 }
@@ -78,14 +100,22 @@ function effectText(name, level) {
     const base = ITEM_EFFECTS[name];
     if (!base) return "効果なし";
 
-    const xp = Math.round(base.xpBonus * level * 100);
-    const coin = Math.round(base.coinBonus * level * 100);
+    const bonus = calcBonus(base, level);
+    const xp = Math.round(bonus.xpBonus * 100);
+    const coin = Math.round(bonus.coinBonus * 100);
 
     const parts = [];
     if (xp > 0) parts.push(`獲得XP +${xp}%`);
     if (coin > 0) parts.push(`獲得コイン +${coin}%`);
 
     return parts.length > 0 ? parts.join(" / ") : "効果なし";
+
+}
+
+function nameWithLevel(item) {
+
+    const dup = item.duplicates > 0 ? `(${item.duplicates})` : "";
+    return `${item.name}(Lv.${item.level}${dup})`;
 
 }
 
@@ -111,7 +141,7 @@ function renderEquipment(player) {
 
     if (equipped) {
 
-        els.current.querySelector(".friend-item-name").innerText = equipped.name;
+        els.current.querySelector(".friend-item-name").innerText = nameWithLevel(equipped);
         els.current.querySelector(".friend-item-level").innerText = effectText(equipped.name, equipped.level);
 
     } else {
@@ -134,32 +164,112 @@ function renderEquipment(player) {
 
         const card = document.createElement("div");
         card.className = "friend-item-card";
+        card.style.cursor = "pointer";
 
         card.innerHTML = `
             <div class="friend-item-info">
-                <div class="friend-item-name">${item.name}(Lv.${item.level})</div>
+                <div class="friend-item-name">${nameWithLevel(item)}${isEquipped ? "(装備中)" : ""}</div>
                 <div class="friend-item-level">${effectText(item.name, item.level)}</div>
             </div>
-            <button class="${isEquipped ? "equip-unequip-btn" : "friend-approve-btn"}">
-                ${isEquipped ? "解除する" : "装備する"}
-            </button>
         `;
 
-        card.querySelector("button").addEventListener("click", async () => {
-
-            const current = getPlayerData();
-            if (!current) return;
-
-            current.equippedItemId = isEquipped ? null : item.id;
-
-            await saveGame();
-            renderEquipment(current);
-
-        });
+        card.addEventListener("click", () => openItemDetail(item.id));
 
         els.inventoryList.appendChild(card);
 
     });
+
+}
+
+// ======================================
+// アイテム詳細(レベルアップ・装備)
+// ======================================
+
+function openItemDetail(itemId) {
+
+    selectedItemId = itemId;
+    renderItemDetail();
+
+    els.detailOverlay.classList.add("show");
+
+}
+
+function closeItemDetail() {
+    els.detailOverlay.classList.remove("show");
+    selectedItemId = null;
+}
+
+function renderItemDetail() {
+
+    const player = getPlayerData();
+    if (!player || !selectedItemId) return;
+
+    const items = (player.inventory || []).map(normalizeItem);
+    const item = items.find((it) => it.id === selectedItemId);
+
+    if (!item) {
+        closeItemDetail();
+        return;
+    }
+
+    const isEquipped = item.id === player.equippedItemId;
+
+    els.detailName.innerText = nameWithLevel(item);
+    els.detailEffect.innerText = effectText(item.name, item.level);
+
+    els.detailLevelupNote.innerText = item.duplicates > 0
+        ? `被りを1個消費して無料でレベルアップできます(残り被り: ${item.duplicates})`
+        : `レベルアップには🪙${LEVELUP_COST}コイン必要です(所持: ${player.coins})`;
+
+    els.detailEquipBtn.innerText = isEquipped ? "解除する" : "装備する";
+
+}
+
+async function handleLevelUp() {
+
+    const player = getPlayerData();
+    if (!player || !selectedItemId) return;
+
+    const items = (player.inventory || []).map(normalizeItem);
+    const item = items.find((it) => it.id === selectedItemId);
+    if (!item) return;
+
+    if (item.duplicates > 0) {
+
+        item.duplicates -= 1;
+
+    } else {
+
+        if (player.coins < LEVELUP_COST) {
+            alert(`コインが足りません。(レベルアップには🪙${LEVELUP_COST}必要です)`);
+            return;
+        }
+
+        player.coins -= LEVELUP_COST;
+
+    }
+
+    item.level += 1;
+    player.inventory = items;
+
+    await saveGame();
+
+    renderItemDetail();
+    renderEquipment(player);
+
+}
+
+async function handleEquipToggle() {
+
+    const player = getPlayerData();
+    if (!player || !selectedItemId) return;
+
+    player.equippedItemId = (player.equippedItemId === selectedItemId) ? null : selectedItemId;
+
+    await saveGame();
+
+    renderItemDetail();
+    renderEquipment(player);
 
 }
 
@@ -180,6 +290,10 @@ window.addEventListener("DOMContentLoaded", () => {
 
     els.equipBtn?.addEventListener("click", openEquipment);
     els.closeBtn.addEventListener("click", closeEquipment);
+
+    els.detailCloseBtn.addEventListener("click", closeItemDetail);
+    els.detailLevelupBtn.addEventListener("click", handleLevelUp);
+    els.detailEquipBtn.addEventListener("click", handleEquipToggle);
 
 });
 
