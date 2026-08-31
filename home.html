@@ -217,6 +217,39 @@
             max-height: 82vh;
             overflow-y: auto;
         }
+
+        .storage-popup-card {
+            max-height: 82vh;
+            overflow: hidden;
+        }
+        #storage-float-area {
+            position: relative;
+            width: 100%;
+            height: 45vh;
+            min-height: 260px;
+            overflow: hidden;
+        }
+        .storage-item-bubble {
+            position: absolute;
+            width: 78px;
+            height: 78px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 35% 30%, #fffdf7, #efe0c8);
+            box-shadow: 0 6px 14px rgba(0,0,0,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 30px;
+            cursor: pointer;
+            animation: storageFloat 3.5s ease-in-out infinite;
+        }
+        @keyframes storageFloat {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-16px) rotate(4deg); }
+        }
+        #storage-detail-overlay {
+            z-index: 60500;
+        }
         .profile-edit-row {
             display: flex;
             align-items: center;
@@ -1797,7 +1830,7 @@
             <div class="home-footer-menu">
                 <button id="home-gacha-btn" class="circle-menu-btn" data-label="ガチャ">📦</button>
                 <button id="home-equipment-btn" class="circle-menu-btn" data-label="装備">⚔️</button>
-                <button class="circle-menu-btn dummy-btn" data-label="準備中">🔒</button>
+                <button id="home-storage-btn" class="circle-menu-btn" data-label="貯蔵庫">🗄️</button>
                 <button class="circle-menu-btn dummy-btn" data-label="準備中">🔒</button>
             </div>
         </div>
@@ -1873,11 +1906,11 @@
             <div id="gacha-screen-coin-text" class="gacha-coin-status">所持コイン: 🪙 0</div>
             <div id="gacha-main-box">📦</div>
             
-            <button id="gacha-draw-action-btn" class="gacha-draw-action-btn">1回引く (🪙50)</button>
+            <button id="gacha-draw-action-btn" class="gacha-draw-action-btn">1回引く (🪙500)</button>
 
             <div id="gacha-choice-container">
-                <button id="gacha-convert-btn" class="gacha-choice-btn">コインに変換する</button>
-                <button id="gacha-keep-btn" class="gacha-choice-btn">所持する</button>
+                <button id="gacha-hold-btn" class="gacha-choice-btn">保留</button>
+                <button id="gacha-keep-btn" class="gacha-choice-btn">入手</button>
             </div>
         </div>
     </div>
@@ -1898,6 +1931,30 @@
             <div id="equipment-inventory-list" class="friend-list-area"></div>
 
             <button id="equipment-close-btn" class="secondary-btn" style="margin-top: 18px;">戻る</button>
+        </div>
+    </div>
+
+    <div id="storage-overlay" class="game-overlay">
+        <div class="popup-card storage-popup-card" style="border-color: #6d4c41;">
+            <div class="popup-title" style="color: #6d4c41;">🗄️ 貯蔵庫</div>
+
+            <div id="storage-float-area"></div>
+
+            <button id="storage-close-btn" class="secondary-btn" style="margin-top: 18px;">戻る</button>
+        </div>
+    </div>
+
+    <div id="storage-detail-overlay" class="game-overlay">
+        <div class="popup-card" style="border-color: #6d4c41;">
+            <div id="storage-detail-icon" style="font-size: 64px; text-align: center;">📦</div>
+            <div id="storage-detail-name" class="popup-title" style="color: #333; text-align: center; font-size: 18px;"></div>
+
+            <div class="profile-edit-actions" style="margin-top: 18px;">
+                <button id="storage-detail-convert-btn" class="primary-btn-small">コインに変換</button>
+                <button id="storage-detail-obtain-btn" class="primary-btn-small">入手</button>
+            </div>
+
+            <button id="storage-detail-close-btn" class="secondary-btn" style="margin-top: 14px;">閉じる</button>
         </div>
     </div>
 
@@ -2068,6 +2125,7 @@
     <script type="module" src="game.js?v=2"></script>
     <script type="module" src="gacha.js?v=2"></script>
     <script type="module" src="equipment.js?v=2"></script>
+    <script type="module" src="storage.js?v=2"></script>
     <script type="module" src="profile.js?v=2"></script>
     <script type="module" src="friends.js?v=2"></script>
     <script type="module" src="match.js?v=2"></script>
