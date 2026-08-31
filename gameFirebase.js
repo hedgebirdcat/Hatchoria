@@ -162,7 +162,8 @@ export async function saveAll({
     title,
     selfIntro,
     nameChangeCount,
-    equippedItemId
+    equippedItemId,
+    storage
 
 }) {
 
@@ -181,7 +182,8 @@ export async function saveAll({
         title,
         selfIntro,
         nameChangeCount,
-        equippedItemId
+        equippedItemId,
+        storage
 
     });
 
