@@ -250,6 +250,9 @@
         #storage-detail-overlay {
             z-index: 60500;
         }
+        #equipment-detail-overlay {
+            z-index: 60500;
+        }
         .profile-edit-row {
             display: flex;
             align-items: center;
@@ -1931,6 +1934,21 @@
             <div id="equipment-inventory-list" class="friend-list-area"></div>
 
             <button id="equipment-close-btn" class="secondary-btn" style="margin-top: 18px;">戻る</button>
+        </div>
+    </div>
+
+    <div id="equipment-detail-overlay" class="game-overlay">
+        <div class="popup-card" style="border-color: #8e24aa;">
+            <div id="equipment-detail-name" class="popup-title" style="color: #333; text-align: center; font-size: 18px;"></div>
+            <div id="equipment-detail-effect" class="friend-item-level" style="text-align: center; margin-top: 6px;"></div>
+            <div id="equipment-detail-levelup-note" class="profile-note" style="text-align: center;"></div>
+
+            <div class="profile-edit-actions" style="margin-top: 18px;">
+                <button id="equipment-detail-levelup-btn" class="primary-btn-small">レベルアップ</button>
+                <button id="equipment-detail-equip-btn" class="primary-btn-small">装備する</button>
+            </div>
+
+            <button id="equipment-detail-close-btn" class="secondary-btn" style="margin-top: 14px;">閉じる</button>
         </div>
     </div>
 
