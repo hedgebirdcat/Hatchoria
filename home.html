@@ -133,6 +133,33 @@
             line-height: 1.4;
         }
 
+        .starter-egg-row {
+            display: flex;
+            justify-content: center;
+            gap: 26px;
+            margin-top: 6px;
+        }
+        .starter-egg-choice {
+            cursor: pointer;
+            padding: 12px;
+            border-radius: 18px;
+            transition: transform 0.15s ease, background 0.15s ease;
+        }
+        .starter-egg-choice:hover {
+            background: #f5f5f5;
+            transform: scale(1.05);
+        }
+        .starter-egg-choice img {
+            width: 90px;
+            height: auto;
+        }
+        .starter-egg-label {
+            margin-top: 8px;
+            font-size: 13px;
+            font-weight: bold;
+            color: #555;
+        }
+
         /* アカウント作成用追加 */
         #account-name-input {
             width: 100%;
@@ -1407,6 +1434,46 @@
             pointer-events: auto;
         }
 
+        #answer-reveal-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 8500;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.45);
+        }
+        #answer-reveal-overlay.show {
+            display: flex;
+        }
+        #answer-reveal-box {
+            min-width: 220px;
+            background: white;
+            border-radius: 20px;
+            padding: 22px 30px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        #answer-reveal-gauge-track {
+            width: 100%;
+            height: 8px;
+            background: #eee;
+            border-radius: 999px;
+            overflow: hidden;
+            margin-bottom: 16px;
+        }
+        #answer-reveal-gauge-fill {
+            height: 100%;
+            width: 100%;
+            background: #ff7043;
+            border-radius: 999px;
+        }
+        #answer-reveal-text {
+            font-size: 22px;
+            font-weight: 900;
+            color: #333;
+        }
+
         #clear-overlay {
             position: fixed;
             inset: 0;
@@ -1591,6 +1658,23 @@
             <div class="popup-subtitle">ゲームで使用するあなたのアカウント名を入力してください。<br>※名前決定時に専用のユーザーコードが発行されます。</div>
             <input type="text" id="account-name-input" placeholder="アカウント名（12文字以内）" maxlength="12">
             <button id="account-submit-btn" class="primary-btn">決定してゲーム開始</button>
+        </div>
+    </div>
+
+    <div id="starter-select-overlay" class="game-overlay">
+        <div class="popup-card" style="text-align: center;">
+            <div class="popup-title" style="font-size: 24px;">HatchOriaへようこそ！</div>
+            <div class="popup-subtitle" style="font-size: 13px; margin-top: -6px;">卵を選択してください</div>
+            <div class="starter-egg-row">
+                <div class="starter-egg-choice" data-type="leaf">
+                    <img src="assets/images/leaf_1.png" alt="草属性の卵">
+                    <div class="starter-egg-label">🌿 草属性</div>
+                </div>
+                <div class="starter-egg-choice" data-type="fire">
+                    <img src="assets/images/fire_1.png" alt="火属性の卵">
+                    <div class="starter-egg-label">🔥 火属性</div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -1845,7 +1929,7 @@
             <div class="diamond-content">ストーリー<div class="lock-line">⛓️🔒⛓️</div></div>
         </div>
         <div class="choice-diamond adventure-choice">
-            <div class="diamond-content">育成</div>
+            <div class="diamond-content">冒険</div>
         </div>
     </div>
 
@@ -1879,6 +1963,14 @@
         <div id="gameover-overlay">
             <div id="gameover-text">GAME OVER</div>
             <button id="gameover-home-btn">ホームに戻る</button>
+        </div>
+        <div id="answer-reveal-overlay">
+            <div id="answer-reveal-box">
+                <div id="answer-reveal-gauge-track">
+                    <div id="answer-reveal-gauge-fill"></div>
+                </div>
+                <div id="answer-reveal-text"></div>
+            </div>
         </div>
         <div id="clear-overlay">
             <div id="clear-frame">
