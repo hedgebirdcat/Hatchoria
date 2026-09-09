@@ -78,6 +78,7 @@ let isWaiting = false;
 // ======================================
 
 let els = {};
+let revealShowing = false;
 
 function cacheElements() {
 
@@ -107,7 +108,10 @@ function cacheElements() {
         clearHomeBtn: document.getElementById("clear-home-btn"),
         comboContinueOverlay: document.getElementById("combo-continue-overlay"),
         comboContinueYes: document.getElementById("combo-continue-yes"),
-        comboContinueNo: document.getElementById("combo-continue-no")
+        comboContinueNo: document.getElementById("combo-continue-no"),
+        answerRevealOverlay: document.getElementById("answer-reveal-overlay"),
+        answerRevealGaugeFill: document.getElementById("answer-reveal-gauge-fill"),
+        answerRevealText: document.getElementById("answer-reveal-text")
     };
 
 }
@@ -308,7 +312,9 @@ window.addEventListener("DOMContentLoaded", () => {
             if (e.key !== "Enter") return;
 
             if (isWaiting) {
-                handleNext();
+                if (!revealShowing) {
+                    handleNext();
+                }
             } else {
                 handleCheck();
             }
@@ -351,11 +357,13 @@ function initializeGame(options = {}) {
     roundXPEarned = 0;
     roundCoinsEarned = 0;
     previousCombo = 0;
+    revealShowing = false;
 
     els.gameoverOverlay.classList.remove("show", "show-text");
     els.gameoverOverlay.style.display = "none";
     els.clearOverlay.classList.remove("show");
     els.clearOverlay.style.display = "none";
+    els.answerRevealOverlay.classList.remove("show");
 
     saveGame();
 
@@ -423,7 +431,9 @@ function handleCheck() {
 
     if (!value) return;
 
-    if (currentQuiz.a.includes(value)) {
+    const correct = currentQuiz.a.includes(value);
+
+    if (correct) {
 
         handleCorrect();
 
@@ -438,7 +448,9 @@ function handleCheck() {
 
     els.checkBtn.style.display = "none";
 
-    if (life > 0) {
+    // 不正解の場合は正解表示のあと自動で次に進むので、
+    // 「次へ進む」ボタンは正解した時だけ表示する
+    if (correct && life > 0) {
         els.nextBtn.style.display = "inline-block";
     }
 
@@ -517,13 +529,56 @@ function handleWrong() {
     combo = 0;
     player.combo = 0;
 
+    life--;
+
     shakeLife();
 
-    if (life <= 0) {
+    const quiz = currentQuiz;
 
-        handleGameOver();
+    showAnswerReveal(quiz, () => {
 
-    }
+        if (life <= 0) {
+            handleGameOver();
+        } else {
+            handleNext();
+        }
+
+    });
+
+}
+
+// ======================================
+// 不正解時: 正解を表示し、ゲージが0になったら自動で次へ進む
+// ======================================
+
+function showAnswerReveal(quiz, onDone) {
+
+    revealShowing = true;
+
+    els.answerRevealText.innerText = "正解：" + quiz.a.join("、");
+
+    // 一度幅をリセットしてから、次のフレームでアニメーションを開始する
+    // (同じフレーム内で変えると、5秒かけて減っていくのが効かないため)
+    els.answerRevealGaugeFill.style.transition = "none";
+    els.answerRevealGaugeFill.style.width = "100%";
+    void els.answerRevealGaugeFill.offsetWidth;
+
+    els.answerRevealOverlay.classList.add("show");
+
+    requestAnimationFrame(() => {
+
+        els.answerRevealGaugeFill.style.transition = "width 5s linear";
+        els.answerRevealGaugeFill.style.width = "0%";
+
+    });
+
+    setTimeout(() => {
+
+        els.answerRevealOverlay.classList.remove("show");
+        revealShowing = false;
+        onDone();
+
+    }, 5000);
 
 }
 
