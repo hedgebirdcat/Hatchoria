@@ -74,7 +74,10 @@ function cacheElements() {
 
         accountCreationOverlay: document.getElementById("account-creation-overlay"),
         accountNameInput: document.getElementById("account-name-input"),
-        accountSubmitBtn: document.getElementById("account-submit-btn")
+        accountSubmitBtn: document.getElementById("account-submit-btn"),
+
+        starterSelectOverlay: document.getElementById("starter-select-overlay"),
+        starterEggChoices: Array.from(document.querySelectorAll(".starter-egg-choice"))
     };
 
 }
@@ -132,6 +135,26 @@ function submitAccountName() {
     registerFriendCode(player.friendCode, player.accountName);
 
     els.accountCreationOverlay.classList.remove("show");
+    els.starterSelectOverlay.classList.add("show");
+
+}
+
+// ======================================
+// 卵選択(新規登録時、最初にどちらのモンスターを
+// 育てるか選ぶ)
+// ======================================
+
+function handleStarterChoice(type) {
+
+    const player = getPlayerData();
+    if (!player) return;
+
+    player.monster = type;
+    player.monsterLevel = 1;
+
+    saveGame();
+
+    els.starterSelectOverlay.classList.remove("show");
 
     // ホーム画面の表示更新・ログインボーナス確認をトリガーする
     window.dispatchEvent(new Event("hatchoria:playerReady"));
@@ -410,6 +433,14 @@ window.addEventListener("DOMContentLoaded", () => {
     els.introSaveBtn.addEventListener("click", saveIntroEdit);
 
     els.accountSubmitBtn.addEventListener("click", submitAccountName);
+
+    els.starterEggChoices.forEach((el) => {
+
+        el.addEventListener("click", () => {
+            handleStarterChoice(el.dataset.type);
+        });
+
+    });
 
 });
 
