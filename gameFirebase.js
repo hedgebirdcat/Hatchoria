@@ -163,7 +163,8 @@ export async function saveAll({
     selfIntro,
     nameChangeCount,
     equippedItemId,
-    storage
+    storage,
+    starterChosen
 
 }) {
 
@@ -183,7 +184,8 @@ export async function saveAll({
         selfIntro,
         nameChangeCount,
         equippedItemId,
-        storage
+        storage,
+        starterChosen
 
     });
 
