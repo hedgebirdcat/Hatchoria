@@ -197,6 +197,13 @@ window.addEventListener("DOMContentLoaded", () => {
                 player.monster = DEFAULT_MONSTER;
             }
 
+            // 卵選択が済んでいるかどうかのフラグが未設定の場合、
+            // すでにフレンドコードを持つ(=既存の)ユーザーは選択済み扱いにする。
+            // フレンドコードが無い完全新規のユーザーはfalse(未選択)にしておく。
+            if (player.starterChosen === undefined) {
+                player.starterChosen = !!player.friendCode;
+            }
+
             // monsterLevelが未設定の場合はlevelに合わせておく
             // (Firestoreへのupdateはundefinedの値があるとエラーになるため)
             if (!player.monsterLevel) {
