@@ -110,7 +110,16 @@ function checkAccountSetup() {
     if (!player) return;
 
     if (!player.friendCode) {
+
         els.accountCreationOverlay.classList.add("show");
+        return;
+
+    }
+
+    // アカウントはあるが、卵をまだ選んでいない
+    // (リセット直後など)場合は選択画面を出す
+    if (player.starterChosen === false) {
+        els.starterSelectOverlay.classList.add("show");
     }
 
 }
@@ -151,6 +160,7 @@ function handleStarterChoice(type) {
 
     player.monster = type;
     player.monsterLevel = 1;
+    player.starterChosen = true;
 
     saveGame();
 
@@ -387,9 +397,12 @@ function resetSaveData() {
     player.exp = 0;
     player.coins = 0;
     player.goal = DEFAULT_GOAL;
-    player.monster = DEFAULT_MONSTER;
+    player.monster = null;
     player.monsterLevel = 1;
     player.inventory = [];
+    player.storage = [];
+    player.equippedItemId = null;
+    player.starterChosen = false;
 
     saveGame().then(() => {
         location.reload();
