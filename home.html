@@ -557,6 +557,25 @@
         #match-select-phase.show {
             display: block;
         }
+        #match-cancel-btn {
+            display: none;
+            position: absolute;
+            top: 18px;
+            left: 18px;
+            z-index: 20;
+            padding: 10px 18px;
+            border: none;
+            border-radius: 999px;
+            background: #757575;
+            color: white;
+            font-weight: 900;
+            font-size: 14px;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.18);
+            cursor: pointer;
+        }
+        #match-cancel-btn.show {
+            display: block;
+        }
         .match-select-title {
             font-size: 20px;
             font-weight: 900;
@@ -694,6 +713,31 @@
         }
         #match-result-overlay.show {
             display: flex;
+        }
+        #match-disconnect-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 62000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0,0,0,0.62);
+        }
+        #match-disconnect-overlay.show {
+            display: flex;
+        }
+        #match-disconnect-message {
+            width: 82%;
+            max-width: 380px;
+            padding: 30px 24px;
+            border-radius: 24px;
+            background: white;
+            color: #d84315;
+            font-size: 22px;
+            font-weight: 900;
+            line-height: 1.6;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.4);
         }
         #match-result-box {
             width: 82%;
@@ -1788,6 +1832,8 @@
 
         <div id="match-opponent-status" class="match-opponent-status"></div>
 
+        <button id="match-cancel-btn" type="button">キャンセル</button>
+
         <div id="match-select-phase">
             <div class="match-select-title">問題数を選ぼう</div>
             <div class="match-select-buttons">
@@ -1830,6 +1876,10 @@
                 </div>
                 <button id="match-result-home-btn">ホームへ</button>
             </div>
+        </div>
+
+        <div id="match-disconnect-overlay">
+            <div id="match-disconnect-message">相手との接続が切れました</div>
         </div>
 
     </div>
