@@ -6,8 +6,7 @@
 
 import { getPlayerData, saveGame } from "./save.js";
 
-// アイテムごとの効果(レベルに比例させておくことで、
-// 将来アイテムのレベルアップ機能を追加しても自然に対応できる)
+// アイテムごとの基礎効果(Lv.1時点)
 export const ITEM_EFFECTS = {
     "道化師の仮面 🎭": { coinBonus: 0.05, xpBonus: 0 },
     "神秘の果実 🍋":   { coinBonus: 0.02, xpBonus: 0.05 },
@@ -16,8 +15,7 @@ export const ITEM_EFFECTS = {
 };
 
 const LEVELUP_COST = 100; // レベルアップに必要なコイン(被りがあれば消費して無料)
-const MILESTONE_STEP = 10;   // このレベルごとに追加効果
-const MILESTONE_BONUS = 0.01; // 追加効果の量(1%)
+const LEVEL_EFFECT_BONUS = 0.01; // 1レベル上がるごとの追加効果(1%)
 
 // 所持アイテムの1件を { id, name, level, duplicates } の形に揃える
 // (以前はアイテム名の文字列だけを保存していたため、古いデータにも対応する)
@@ -36,14 +34,15 @@ export function normalizeItem(item, index) {
 
 }
 
-// レベルとマイルストーン(10レベルごとに+1%)を踏まえた効果を計算する
+// Lv.1の基礎効果を維持し、レベルアップ1回ごとに効果を1%加算する
 function calcBonus(base, level) {
 
-    const milestone = Math.floor(level / MILESTONE_STEP) * MILESTONE_BONUS;
+    const safeLevel = Math.max(1, Number(level) || 1);
+    const levelBonus = (safeLevel - 1) * LEVEL_EFFECT_BONUS;
 
     return {
-        xpBonus: base.xpBonus * level + (base.xpBonus > 0 ? milestone : 0),
-        coinBonus: base.coinBonus * level + (base.coinBonus > 0 ? milestone : 0)
+        xpBonus: base.xpBonus > 0 ? base.xpBonus + levelBonus : 0,
+        coinBonus: base.coinBonus > 0 ? base.coinBonus + levelBonus : 0
     };
 
 }
