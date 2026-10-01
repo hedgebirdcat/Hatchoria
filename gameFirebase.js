@@ -474,6 +474,23 @@ export async function deleteMatch(matchId) {
 
 }
 
+// 対戦をキャンセルする
+// いきなり削除せず状態を残すことで、相手側のonSnapshotに確実に通知する。
+export async function cancelMatch(matchId) {
+
+    const user = auth.currentUser;
+    if (!user) return;
+
+    const ref = doc(db, "matches", matchId);
+
+    await updateDoc(ref, {
+        status: "cancelled",
+        cancelledBy: user.uid,
+        cancelledAt: Date.now()
+    });
+
+}
+
 // 自分宛に届く対戦の誘いをリアルタイムで監視する
 // (コールバックには pending 状態の誘い一覧が渡される)
 export function listenIncomingMatchInvites(callback, onError) {
