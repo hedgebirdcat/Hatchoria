@@ -833,6 +833,79 @@
             cursor: pointer;
             z-index: 10;
         }
+        #home-gift-btn {
+            position: absolute;
+            top: 15px;
+            right: 75px;
+            width: 50px;
+            height: 50px;
+            border: none;
+            border-radius: 50%;
+            font-size: 24px;
+            background: white;
+            box-shadow: 0 5px 15px rgba(0,0,0,.15);
+            cursor: pointer;
+            z-index: 10;
+        }
+        #gift-badge {
+            position: absolute;
+            top: -3px;
+            right: -3px;
+            min-width: 19px;
+            height: 19px;
+            padding: 0 5px;
+            border-radius: 999px;
+            background: #e53935;
+            color: white;
+            font-size: 11px;
+            line-height: 19px;
+            font-weight: 900;
+            display: none;
+        }
+        #gift-badge.show {
+            display: block;
+        }
+        #gift-list {
+            max-height: 52vh;
+            overflow-y: auto;
+            margin-top: 14px;
+        }
+        .gift-card {
+            padding: 14px;
+            margin-bottom: 10px;
+            border: 2px solid #ffe082;
+            border-radius: 16px;
+            background: #fffdf5;
+            text-align: left;
+        }
+        .gift-card-title {
+            color: #e65100;
+            font-size: 16px;
+            font-weight: 900;
+        }
+        .gift-card-message {
+            margin-top: 5px;
+            color: #555;
+            font-size: 13px;
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+        }
+        .gift-card-reward {
+            margin-top: 9px;
+            color: #8d6e00;
+            font-size: 14px;
+            font-weight: 900;
+        }
+        .gift-receive-btn {
+            width: 100%;
+            margin-top: 11px;
+        }
+        .gift-empty-text {
+            padding: 25px 10px;
+            color: #888;
+            font-size: 14px;
+            text-align: center;
+        }
 
         #egg-area {
             position: absolute;
@@ -1734,6 +1807,14 @@
         </div>
     </div>
 
+    <div id="gift-overlay" class="game-overlay">
+        <div class="popup-card" style="border-color: #ffb300; max-height: 82vh;">
+            <div class="popup-title" style="color: #e65100;">✉︎ 運営からのギフト</div>
+            <div id="gift-list"></div>
+            <button id="gift-close-btn" class="secondary-btn">閉じる</button>
+        </div>
+    </div>
+
     <div id="profile-overlay" class="game-overlay">
         <div class="popup-card profile-popup-card" style="border-color: #e91e63;">
             <div class="popup-title" style="color: #e91e63;">👤 プロフィール</div>
@@ -1945,6 +2026,9 @@
         </div>
 
         <button id="setting-btn">⚙️</button>
+        <button id="home-gift-btn" aria-label="運営からのギフト">
+            ✉︎<span id="gift-badge">0</span>
+        </button>
 
         <div id="egg-area" class="float-char-anim"></div>
 
@@ -2287,6 +2371,7 @@
     <script type="module" src="equipment.js?v=2"></script>
     <script type="module" src="storage.js?v=2"></script>
     <script type="module" src="profile.js?v=2"></script>
+    <script type="module" src="gift.js?v=1"></script>
     <script type="module" src="friends.js?v=2"></script>
     <script type="module" src="match.js?v=2"></script>
 </body>
