@@ -9,6 +9,8 @@ import { getAuth } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth
 
 import { getFirestore } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
 
+import { getFunctions } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-functions.js";
+
 
 // Firebase設定
 const firebaseConfig = {
@@ -33,6 +35,9 @@ const auth = getAuth(app);
 // Firestore
 const db = getFirestore(app);
 
+// 運営ギフトの受け取りなど、サーバー側処理に使用
+const functions = getFunctions(app);
+
 
 // 他のファイルから使えるようにする
-export { auth, db };
+export { auth, db, functions };
