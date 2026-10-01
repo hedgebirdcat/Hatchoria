@@ -51,6 +51,11 @@ let declinedQueue = [];
 // 現在参加している進行中の対戦(あれば1件)
 let activeMatchId = null;
 let activeMatchUnsubscribe = null;
+// 自分でキャンセルしてホームへ戻る途中かどうか
+let isLeavingMatch = false;
+// 相手切断通知を同じ対戦で二重表示しないためのフラグ
+let disconnectHandled = false;
+let disconnectHomeTimer = null;
 
 // このIDの対戦では、もうカウントダウンを表示し終えたか
 let countdownShownFor = null;
@@ -97,7 +102,9 @@ function cacheElements() {
         resultTitle: document.getElementById("match-result-title"),
         resultMyScore: document.getElementById("match-result-my-score"),
         resultOpponentScore: document.getElementById("match-result-opponent-score"),
-        resultHomeBtn: document.getElementById("match-result-home-btn")
+        resultHomeBtn: document.getElementById("match-result-home-btn"),
+        cancelBtn: document.getElementById("match-cancel-btn"),
+        disconnectOverlay: document.getElementById("match-disconnect-overlay")
     };
 
 }
@@ -323,6 +330,14 @@ function enterMatch(matchId) {
     if (activeMatchId === matchId) return; // すでに入室済み
 
     activeMatchId = matchId;
+    isLeavingMatch = false;
+    disconnectHandled = false;
+
+    if (disconnectHomeTimer) {
+        clearTimeout(disconnectHomeTimer);
+        disconnectHomeTimer = null;
+    }
+
     countdownShownFor = null;
     myLocalIndex = 0;
     myWrongCount = 0;
@@ -342,11 +357,18 @@ function enterMatch(matchId) {
     activeMatchUnsubscribe = listenToMatch(matchId, (match) => {
 
         currentMatchSnapshot = match;
+
+        if (!match) {
+            handleOpponentDisconnected();
+            return;
+        }
+
         renderMatchState(match);
 
     }, (error) => {
 
         console.error("対戦の監視でエラーが発生しました", error);
+        handleOpponentDisconnected();
 
     });
 
@@ -368,6 +390,11 @@ function exitMatch() {
     currentMatchSnapshot = null;
     countdownShownFor = null;
 
+    if (disconnectHomeTimer) {
+        clearTimeout(disconnectHomeTimer);
+        disconnectHomeTimer = null;
+    }
+
     els.countdownOverlay.classList.remove("show");
     els.resultOverlay.classList.remove("show");
     els.waitingMessage.classList.remove("show");
@@ -375,6 +402,55 @@ function exitMatch() {
     els.opponentStatus.classList.remove("show");
     els.gameHeader.classList.remove("show");
     els.gameStage.classList.remove("show");
+    els.cancelBtn.classList.remove("show");
+    els.disconnectOverlay.classList.remove("show");
+
+}
+
+// 相手が対戦ドキュメントを削除した、または監視接続が失敗した場合の処理
+function handleOpponentDisconnected() {
+
+    if (isLeavingMatch || disconnectHandled || !activeMatchId) return;
+
+    disconnectHandled = true;
+
+    // 監視を解除して、以後のイベントで通知が重複しないようにする
+    exitMatch();
+
+    els.disconnectOverlay.classList.add("show");
+
+    disconnectHomeTimer = setTimeout(() => {
+
+        els.disconnectOverlay.classList.remove("show");
+        disconnectHomeTimer = null;
+        window.dispatchEvent(new Event("hatchoria:requestHome"));
+
+    }, 1600);
+
+}
+
+// 問題数選択中のキャンセル処理
+async function cancelCurrentMatch() {
+
+    const matchId = activeMatchId;
+
+    if (!matchId) {
+        window.dispatchEvent(new Event("hatchoria:requestHome"));
+        return;
+    }
+
+    // 自分の削除通知を「相手切断」として表示しない
+    isLeavingMatch = true;
+    exitMatch();
+
+    try {
+        await deleteMatch(matchId);
+    } catch (error) {
+        // 相手が先に削除した場合でも、ホームへ戻る操作は続行する
+        console.error("対戦キャンセル時の削除に失敗しました", error);
+    }
+
+    window.dispatchEvent(new Event("hatchoria:requestHome"));
 
 }
 
@@ -388,7 +464,7 @@ function isInviter(match) {
 
 function renderMatchState(match) {
 
-    if (!match || match.status === "declined") {
+    if (match.status === "declined") {
         exitMatch();
         return;
     }
@@ -443,6 +519,9 @@ function renderSelectPhase(match, iAmInviter, opponentName) {
     els.selectBtns.forEach((btn) => {
         btn.classList.toggle("selected", Number(btn.dataset.count) === myCount);
     });
+
+    // 選択画面ではキャンセルボタンを表示する
+    els.cancelBtn.classList.add("show");
 
     if (opponentCount) {
 
@@ -506,6 +585,7 @@ function generateMatchQuestions(count) {
 function renderActivePhase(match, iAmInviter, opponentName) {
 
     els.selectPhase.classList.remove("show");
+    els.cancelBtn.classList.remove("show");
     els.gameHeader.classList.add("show");
     els.gameStage.classList.add("show");
 
@@ -830,6 +910,8 @@ window.addEventListener("DOMContentLoaded", () => {
         window.dispatchEvent(new Event("hatchoria:requestHome"));
 
     });
+
+    els.cancelBtn.addEventListener("click", cancelCurrentMatch);
 
     // 画面が切り替わるたびに、通知ポップアップを出すべきか判定し直す
     window.addEventListener("hatchoria:screenChanged", updateGlobalInvitePopup);
