@@ -20,6 +20,7 @@ import {
     acceptMatchInvite,
     declineMatchInvite,
     deleteMatch,
+    cancelMatch,
     listenIncomingMatchInvites,
     listenDeclinedMatches,
     listenMyActiveMatches,
@@ -439,17 +440,24 @@ async function cancelCurrentMatch() {
         return;
     }
 
-    // 自分の削除通知を「相手切断」として表示しない
+    // 自分のキャンセル通知を「相手切断」として表示しない
     isLeavingMatch = true;
-    exitMatch();
 
     try {
-        await deleteMatch(matchId);
+        // 削除ではなく cancelled 状態を書き込み、相手側へ確実に通知する
+        await cancelMatch(matchId);
     } catch (error) {
-        // 相手が先に削除した場合でも、ホームへ戻る操作は続行する
-        console.error("対戦キャンセル時の削除に失敗しました", error);
+        console.error("対戦キャンセル状態の保存に失敗しました", error);
+
+        // 古いFirestoreルールなどで状態変更が拒否された場合の後退処理
+        try {
+            await deleteMatch(matchId);
+        } catch (deleteError) {
+            console.error("対戦キャンセル時の削除にも失敗しました", deleteError);
+        }
     }
 
+    exitMatch();
     window.dispatchEvent(new Event("hatchoria:requestHome"));
 
 }
@@ -466,6 +474,15 @@ function renderMatchState(match) {
 
     if (match.status === "declined") {
         exitMatch();
+        return;
+    }
+
+    if (match.status === "cancelled") {
+        if (isLeavingMatch) {
+            exitMatch();
+        } else {
+            handleOpponentDisconnected();
+        }
         return;
     }
 
