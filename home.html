@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>単語育成ゲーム Ultimate アカウント＆設定対応版</title>
+    <link rel="stylesheet" href="ranking.css?v=1">
     <style>
         /* ==========================================================================
            共通設定 & ベースCSS (スクロール完全防止)
@@ -2034,8 +2035,8 @@
 
         <div id="right-menu-container">
             <div id="diamond-menu">
-                <div class="diamond locked">
-                    <div class="diamond-content">ランキング<div class="lock-line">⛓️🔒⛓️</div></div>
+                <div class="diamond" id="home-ranking-diamond">
+                    <div class="diamond-content">ランキング</div>
                 </div>
                 <div class="diamond left" id="home-friend-diamond">
                     <div class="diamond-content">フレンド</div>
@@ -2144,6 +2145,27 @@
         </div>
     </div>
 
+    <div id="ranking-screen" class="screen ranking-screen">
+        <div class="ranking-shell">
+            <div class="ranking-header">
+                <h1 class="ranking-title">ランキング</h1>
+                <button id="ranking-back-btn" class="ranking-back-btn">ホームへ</button>
+            </div>
+            <div class="ranking-tabs" role="tablist" aria-label="ランキング範囲">
+                <button class="ranking-tab active" data-ranking-tab="overall">総合</button>
+                <button class="ranking-tab" data-ranking-tab="weekly">今週</button>
+                <button class="ranking-tab" data-ranking-tab="friends">フレンド</button>
+            </div>
+            <div class="ranking-metrics" role="tablist" aria-label="ランキング指標">
+                <button class="ranking-metric active" data-ranking-metric="correct">累計正解数</button>
+                <button class="ranking-metric" data-ranking-metric="xp">累計XP</button>
+                <button class="ranking-metric" data-ranking-metric="level">レベル</button>
+            </div>
+            <div id="ranking-status" class="ranking-status"></div>
+            <div id="ranking-list" class="ranking-list"></div>
+            <div class="ranking-note">今週ランキングは日本時間の月曜日にリセットされます。</div>
+        </div>
+    </div>
     <div id="equipment-overlay" class="game-overlay">
         <div class="popup-card" style="border-color: #8e24aa; max-height: 82vh; overflow-y: auto;">
             <div class="popup-title" style="color: #8e24aa;">⚔️ 装備</div>
@@ -2374,5 +2396,6 @@
     <script type="module" src="gift.js?v=1"></script>
     <script type="module" src="friends.js?v=2"></script>
     <script type="module" src="match.js?v=2"></script>
+    <script type="module" src="rankings.js?v=1"></script>
 </body>
 </html>
