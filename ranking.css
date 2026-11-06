@@ -1,0 +1,116 @@
+.ranking-screen {
+    display: none;
+    padding: 22px 18px;
+    overflow-y: auto;
+    background: linear-gradient(160deg, #e8f5e9, #bbdefb);
+}
+.ranking-shell {
+    width: min(100%, 520px);
+    margin: 0 auto;
+    min-height: 100%;
+    padding-bottom: 24px;
+}
+.ranking-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+}
+.ranking-title {
+    margin: 0;
+    color: #1b5e20;
+    font-size: 25px;
+    font-weight: 900;
+}
+.ranking-back-btn {
+    border: 0;
+    border-radius: 999px;
+    padding: 9px 15px;
+    background: rgba(255,255,255,.85);
+    color: #37474f;
+    font-weight: 800;
+}
+.ranking-tabs, .ranking-metrics {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+.ranking-tab, .ranking-metric {
+    flex: 1;
+    border: 0;
+    border-radius: 12px;
+    padding: 11px 5px;
+    background: rgba(255,255,255,.7);
+    color: #546e7a;
+    font-size: 13px;
+    font-weight: 900;
+}
+.ranking-tab.active, .ranking-metric.active {
+    color: white;
+    background: #2e7d32;
+    box-shadow: 0 4px 10px rgba(46,125,50,.25);
+}
+.ranking-status {
+    min-height: 20px;
+    margin: 7px 4px;
+    color: #607d8b;
+    font-size: 12px;
+    text-align: center;
+}
+.ranking-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.ranking-row {
+    display: grid;
+    grid-template-columns: 42px 1fr auto;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 13px;
+    border: 2px solid rgba(255,255,255,.75);
+    border-radius: 16px;
+    background: rgba(255,255,255,.86);
+    box-shadow: 0 3px 9px rgba(38,50,56,.09);
+}
+.ranking-row.me {
+    border-color: #ffb300;
+    background: #fff8e1;
+}
+.ranking-position {
+    color: #ef6c00;
+    font-size: 19px;
+    font-weight: 900;
+    text-align: center;
+}
+.ranking-name {
+    overflow: hidden;
+    color: #263238;
+    font-size: 15px;
+    font-weight: 900;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.ranking-level {
+    margin-top: 3px;
+    color: #78909c;
+    font-size: 11px;
+}
+.ranking-score {
+    color: #1b5e20;
+    font-size: 17px;
+    font-weight: 900;
+    white-space: nowrap;
+}
+.ranking-empty {
+    padding: 28px 10px;
+    color: #607d8b;
+    text-align: center;
+}
+.ranking-note {
+    margin-top: 12px;
+    color: #607d8b;
+    font-size: 11px;
+    line-height: 1.5;
+    text-align: center;
+}
