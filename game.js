@@ -187,13 +187,13 @@ window.addEventListener("DOMContentLoaded", () => {
             player = await loadSaveData();
 
             if (!player) {
+    console.error("Firestoreにプレイヤーデータがありません。");
+    showLoadingError(
+        "users/" + auth.currentUser.uid + " が見つかりません"
+    );
+    return;
+}
 
-                console.log("プレイヤーデータ取得失敗。ログイン画面に戻ります。");
-                hideLoadingOverlay();
-                window.location.href = "index.html";
-                return;
-
-            }
 
             // 必要XP(goal)が未設定の場合は初期値を補う
             if (!player.goal) {
