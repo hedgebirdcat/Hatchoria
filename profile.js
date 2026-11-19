@@ -9,7 +9,9 @@
 // そのまま読み書きする。ここではローカルの username/usercode は持たない。
 
 import { getPlayerData, saveGame } from "./save.js";
-import { registerFriendCode } from "./gameFirebase.js";
+import { deletePlayerAccountData, registerFriendCode } from "./gameFirebase.js";
+import { auth } from "./firebase.js";
+import { deleteUser } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
 
 const DEFAULT_MONSTER = "leaf";
 const DEFAULT_GOAL = 50;
@@ -45,6 +47,12 @@ function cacheElements() {
         menuAccountBtn: document.getElementById("menu-account-btn"),
         accountOverlay: document.getElementById("account-overlay"),
         accountResetBtn: document.getElementById("account-reset-btn"),
+        accountDeleteBtn: document.getElementById("account-delete-btn"),
+        accountDeleteConfirmArea: document.getElementById("account-delete-confirm-area"),
+        accountDeleteRequiredName: document.getElementById("account-delete-required-name"),
+        accountDeleteNameInput: document.getElementById("account-delete-name-input"),
+        accountDeleteMessage: document.getElementById("account-delete-message"),
+        accountDeleteConfirmBtn: document.getElementById("account-delete-confirm-btn"),
         accountCloseBtn: document.getElementById("account-close-btn"),
 
         profileOverlay: document.getElementById("profile-overlay"),
@@ -426,6 +434,62 @@ function closeAccount() {
 
 }
 
+function openAccountDeleteConfirmation() {
+
+    const player = getPlayerData();
+    if (!player) return;
+
+    els.accountDeleteRequiredName.innerText = `確認のため「${player.accountName || ""}」と同じ名前を入力してください。`;
+    els.accountDeleteConfirmArea.style.display = "block";
+    els.accountDeleteNameInput.value = "";
+    els.accountDeleteMessage.innerText = "";
+    els.accountDeleteConfirmBtn.disabled = true;
+    els.accountDeleteConfirmBtn.style.opacity = ".5";
+    els.accountDeleteNameInput.focus();
+
+}
+
+function updateAccountDeleteButton() {
+
+    const player = getPlayerData();
+    const matches = player && els.accountDeleteNameInput.value === (player.accountName || "");
+
+    els.accountDeleteConfirmBtn.disabled = !matches;
+    els.accountDeleteConfirmBtn.style.opacity = matches ? "1" : ".5";
+
+}
+
+async function permanentlyDeleteAccount() {
+
+    const player = getPlayerData();
+    const user = auth.currentUser;
+
+    if (!player || !user) return;
+
+    if (els.accountDeleteNameInput.value !== (player.accountName || "")) {
+        els.accountDeleteMessage.innerText = "アカウント名が一致していません。";
+        return;
+    }
+
+    els.accountDeleteConfirmBtn.disabled = true;
+    els.accountDeleteConfirmBtn.innerText = "削除中...";
+    els.accountDeleteMessage.innerText = "セーブデータとアカウントを削除しています。";
+
+    try {
+        await deletePlayerAccountData();
+        await deleteUser(user);
+        window.location.href = "index.html";
+    } catch (error) {
+        console.error("アカウント削除に失敗しました。", error);
+        els.accountDeleteConfirmBtn.disabled = false;
+        els.accountDeleteConfirmBtn.innerText = "アカウントを完全に削除する";
+        els.accountDeleteMessage.innerText = error.code === "auth/requires-recent-login"
+            ? "安全のため、いったんログアウトして再ログインしてからもう一度お試しください。"
+            : "削除に失敗しました。時間を置いてもう一度お試しください。";
+    }
+
+}
+
 // ======================================
 // 初期化
 // ======================================
@@ -446,6 +510,9 @@ window.addEventListener("DOMContentLoaded", () => {
     els.menuProfileBtn.addEventListener("click", openProfile);
     els.menuAccountBtn.addEventListener("click", openAccount);
     els.accountResetBtn.addEventListener("click", resetSaveData);
+    els.accountDeleteBtn.addEventListener("click", openAccountDeleteConfirmation);
+    els.accountDeleteNameInput.addEventListener("input", updateAccountDeleteButton);
+    els.accountDeleteConfirmBtn.addEventListener("click", permanentlyDeleteAccount);
     els.accountCloseBtn.addEventListener("click", closeAccount);
 
     els.profileCloseBtn.addEventListener("click", closeProfile);
