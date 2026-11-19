@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>単語育成ゲーム Ultimate アカウント＆設定対応版</title>
-    <link rel="stylesheet" href="ranking.css?v=1">
     <style>
         /* ==========================================================================
            共通設定 & ベースCSS (スクロール完全防止)
@@ -2035,9 +2034,13 @@
 
         <div id="right-menu-container">
             <div id="diamond-menu">
-                <div class="diamond" id="home-ranking-diamond">
-                    <div class="diamond-content">ランキング</div>
-                </div>
+                <div class="diamond locked">
+    <div class="diamond-content">
+        ランキング
+        <div class="lock-line">⛓️🔒⛓️</div>
+    </div>
+</div>
+
                 <div class="diamond left" id="home-friend-diamond">
                     <div class="diamond-content">フレンド</div>
                 </div>
@@ -2396,6 +2399,5 @@
     <script type="module" src="gift.js?v=1"></script>
     <script type="module" src="friends.js?v=2"></script>
     <script type="module" src="match.js?v=2"></script>
-    <script type="module" src="rankings.js?v=1"></script>
 </body>
 </html>
