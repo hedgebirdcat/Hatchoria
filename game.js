@@ -187,12 +187,20 @@ window.addEventListener("DOMContentLoaded", () => {
             player = await loadSaveData();
 
             if (!player) {
-    console.error("Firestoreにプレイヤーデータがありません。");
+    const uid = auth.currentUser ? auth.currentUser.uid : "UID不明";
+
+    console.error("Firestoreにプレイヤーデータがありません", {
+        uid,
+        path: "users/" + uid
+    });
+
     showLoadingError(
-        "users/" + auth.currentUser.uid + " が見つかりません"
+        "プレイヤーデータが見つかりません。Firestoreの users/" + uid + " を確認してください。"
     );
+
     return;
 }
+
 
 
             // 必要XP(goal)が未設定の場合は初期値を補う
