@@ -45,14 +45,6 @@ const DEFAULT_GOAL = 50;        // 初期の必要XP(Firestoreに未設定の場
 const DEFAULT_MONSTER = "leaf"; // モンスター種類が未設定の場合のデフォルト
 const QUESTIONS_PER_ROUND = 10; // 1ラウンドの出題数
 
-function getRankingWeekKey(date = new Date()) {
-    const d = new Date(date);
-    const day = d.getDay();
-    const diff = day === 0 ? -6 : 1 - day;
-    d.setDate(d.getDate() + diff);
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-}
-
 // レベルに応じた進化段階(home.jsのupdateMonster()と同じ基準)
 function getMonsterStage(level) {
 
@@ -187,21 +179,13 @@ window.addEventListener("DOMContentLoaded", () => {
             player = await loadSaveData();
 
             if (!player) {
-    const uid = auth.currentUser ? auth.currentUser.uid : "UID不明";
 
-    console.error("Firestoreにプレイヤーデータがありません", {
-        uid,
-        path: "users/" + uid
-    });
+                console.log("プレイヤーデータ取得失敗。ログイン画面に戻ります。");
+                hideLoadingOverlay();
+                window.location.href = "index.html";
+                return;
 
-    showLoadingError(
-        "プレイヤーデータが見つかりません。Firestoreの users/" + uid + " を確認してください。"
-    );
-
-    return;
-}
-
-
+            }
 
             // 必要XP(goal)が未設定の場合は初期値を補う
             if (!player.goal) {
@@ -253,18 +237,6 @@ window.addEventListener("DOMContentLoaded", () => {
             }
             if (player.equippedItemId === undefined) {
                 player.equippedItemId = null;
-            }
-
-            // ランキング用の累計値。既存ユーザーは0から互換対応する。
-            if (!Number.isFinite(player.totalCorrectAnswers)) player.totalCorrectAnswers = 0;
-            if (!Number.isFinite(player.totalXpEarned)) player.totalXpEarned = 0;
-            if (!Number.isFinite(player.weeklyCorrectAnswers)) player.weeklyCorrectAnswers = 0;
-            if (!Number.isFinite(player.weeklyXpEarned)) player.weeklyXpEarned = 0;
-            const rankingWeek = getRankingWeekKey();
-            if (player.rankingWeek !== rankingWeek) {
-                player.weeklyCorrectAnswers = 0;
-                player.weeklyXpEarned = 0;
-                player.rankingWeek = rankingWeek;
             }
 
             // リロード・再訪問時も前回のコンボを引き継げるように、
@@ -508,14 +480,6 @@ function handleCorrect() {
     player.combo = combo;
     correctAnswersCount++;
 
-    player.totalCorrectAnswers = (player.totalCorrectAnswers || 0) + 1;
-    if (player.rankingWeek !== getRankingWeekKey()) {
-        player.weeklyCorrectAnswers = 0;
-        player.weeklyXpEarned = 0;
-        player.rankingWeek = getRankingWeekKey();
-    }
-    player.weeklyCorrectAnswers = (player.weeklyCorrectAnswers || 0) + 1;
-
     const bonus = getEquippedBonus(player);
 
     const comboBonus = Math.floor(combo / COMBO_BONUS_STEP) * COMBO_BONUS_XP;
@@ -542,8 +506,6 @@ function handleCorrect() {
     }
 
     player.exp += gainedXP;
-    player.totalXpEarned = (player.totalXpEarned || 0) + gainedXP;
-    player.weeklyXpEarned = (player.weeklyXpEarned || 0) + gainedXP;
     roundXPEarned += gainedXP;
 
     showXpPopup(popupText, isSpecialPopup);
