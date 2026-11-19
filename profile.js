@@ -42,7 +42,10 @@ function cacheElements() {
         settingMenuOverlay: document.getElementById("setting-menu-overlay"),
         settingMenuCloseBtn: document.getElementById("setting-menu-close-btn"),
         menuProfileBtn: document.getElementById("menu-profile-btn"),
-        menuResetBtn: document.getElementById("menu-reset-btn"),
+        menuAccountBtn: document.getElementById("menu-account-btn"),
+        accountOverlay: document.getElementById("account-overlay"),
+        accountResetBtn: document.getElementById("account-reset-btn"),
+        accountCloseBtn: document.getElementById("account-close-btn"),
 
         profileOverlay: document.getElementById("profile-overlay"),
         profileCloseBtn: document.getElementById("profile-close-btn"),
@@ -410,6 +413,19 @@ function resetSaveData() {
 
 }
 
+function openAccount() {
+
+    els.settingMenuOverlay.classList.remove("show");
+    els.accountOverlay.classList.add("show");
+
+}
+
+function closeAccount() {
+
+    els.accountOverlay.classList.remove("show");
+
+}
+
 // ======================================
 // 初期化
 // ======================================
@@ -428,7 +444,9 @@ window.addEventListener("DOMContentLoaded", () => {
     els.settingBtn.addEventListener("click", openSettingMenu);
     els.settingMenuCloseBtn.addEventListener("click", closeSettingMenu);
     els.menuProfileBtn.addEventListener("click", openProfile);
-    els.menuResetBtn.addEventListener("click", resetSaveData);
+    els.menuAccountBtn.addEventListener("click", openAccount);
+    els.accountResetBtn.addEventListener("click", resetSaveData);
+    els.accountCloseBtn.addEventListener("click", closeAccount);
 
     els.profileCloseBtn.addEventListener("click", closeProfile);
     els.profileCopyBtn.addEventListener("click", copyFriendCode);
