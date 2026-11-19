@@ -1812,6 +1812,15 @@
             <div class="popup-title" style="color: #455a64;">👤 アカウント</div>
             <div class="popup-subtitle">アカウントに関する操作を管理できます。</div>
             <button id="account-reset-btn" class="menu-list-btn" style="color:#d32f2f;">🚨 セーブデータをリセット</button>
+            <button id="account-delete-btn" class="menu-list-btn" style="color:#d32f2f;">アカウント削除</button>
+            <div id="account-delete-confirm-area" style="display:none; margin-top:16px; text-align:left;">
+                <div style="color:#d32f2f; font-weight:900; font-size:18px; line-height:1.5;">本当に削除していいですか？</div>
+                <div style="color:#d32f2f; font-size:13px; line-height:1.6; margin:8px 0 12px;">アカウント名とセーブデータ、コイン、XP、メールアドレス情報がすべて削除されます。この操作は元に戻せません。</div>
+                <div id="account-delete-required-name" style="font-size:13px; font-weight:bold; color:#455a64; margin-bottom:6px;"></div>
+                <input id="account-delete-name-input" type="text" autocomplete="off" placeholder="アカウント名を入力してください" style="width:100%; padding:12px; border:2px solid #ef9a9a; border-radius:10px; font-size:16px; box-sizing:border-box;">
+                <div id="account-delete-message" style="color:#d32f2f; font-size:12px; min-height:18px; margin-top:6px;"></div>
+                <button id="account-delete-confirm-btn" class="menu-list-btn" style="color:#d32f2f; opacity:.5;" disabled>アカウントを完全に削除する</button>
+            </div>
             <button id="account-close-btn" class="secondary-btn" style="margin-top: 14px;">戻る</button>
         </div>
     </div>

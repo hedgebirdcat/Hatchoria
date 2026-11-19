@@ -80,6 +80,47 @@ export async function createPlayerData(data) {
 
 }
 
+// ------------------------------
+// アカウント削除用データ削除
+// ------------------------------
+export async function deletePlayerAccountData() {
+
+    const user = auth.currentUser;
+
+    if (!user) {
+        throw new Error("ログイン状態を確認できません。");
+    }
+
+    const playerRef = doc(db, "users", user.uid);
+    const playerSnap = await getDoc(playerRef);
+    const friendCode = playerSnap.exists() ? playerSnap.data().friendCode : null;
+
+    await deleteDoc(playerRef);
+
+    if (friendCode) {
+        await deleteDoc(doc(db, "friendCodeIndex", friendCode));
+    }
+
+    const requestQueries = [
+        query(collection(db, "friendRequests"), where("fromUid", "==", user.uid)),
+        query(collection(db, "friendRequests"), where("toUid", "==", user.uid))
+    ];
+    const matchQueries = [
+        query(collection(db, "matches"), where("inviterUid", "==", user.uid)),
+        query(collection(db, "matches"), where("opponentUid", "==", user.uid))
+    ];
+
+    const relatedSnapshots = await Promise.all([
+        ...requestQueries.map((q) => getDocs(q)),
+        ...matchQueries.map((q) => getDocs(q))
+    ]);
+
+    const relatedDocs = relatedSnapshots.flatMap((snap) => snap.docs);
+    const uniqueDocs = new Map(relatedDocs.map((item) => [item.ref.path, item.ref]));
+    await Promise.all([...uniqueDocs.values()].map((ref) => deleteDoc(ref)));
+
+}
+
 
 // ------------------------------
 // XP保存
