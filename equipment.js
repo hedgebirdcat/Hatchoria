@@ -88,6 +88,12 @@ function cacheElements() {
         detailEffect: document.getElementById("equipment-detail-effect"),
         detailLevelupNote: document.getElementById("equipment-detail-levelup-note"),
         detailLevelupBtn: document.getElementById("equipment-detail-levelup-btn"),
+        detailSingleLevelupBtn: document.getElementById("equipment-detail-single-levelup-btn"),
+        singleLevelupPanel: document.getElementById("equipment-single-levelup-panel"),
+        singleLevelupSlider: document.getElementById("equipment-single-levelup-slider"),
+        singleLevelupMax: document.getElementById("equipment-single-levelup-max"),
+        singleLevelupCost: document.getElementById("equipment-single-levelup-cost"),
+        singleLevelupConfirmBtn: document.getElementById("equipment-single-levelup-confirm-btn"),
         detailEquipBtn: document.getElementById("equipment-detail-equip-btn"),
         detailCloseBtn: document.getElementById("equipment-detail-close-btn")
     };
@@ -187,6 +193,7 @@ function renderEquipment(player) {
 function openItemDetail(itemId) {
 
     selectedItemId = itemId;
+    hideSingleLevelupPanel();
     renderItemDetail();
 
     els.detailOverlay.classList.add("show");
@@ -196,6 +203,77 @@ function openItemDetail(itemId) {
 function closeItemDetail() {
     els.detailOverlay.classList.remove("show");
     selectedItemId = null;
+}
+
+function hideSingleLevelupPanel() {
+
+    if (!els.singleLevelupPanel) return;
+
+    els.singleLevelupPanel.style.display = "none";
+    els.singleLevelupSlider.value = "0";
+
+}
+
+function renderSingleLevelupPanel() {
+
+    const player = getPlayerData();
+    if (!player || !selectedItemId || !els.singleLevelupSlider) return;
+
+    const items = (player.inventory || []).map(normalizeItem);
+    const item = items.find((it) => it.id === selectedItemId);
+    if (!item) return;
+
+    const maxAdditionalLevels = Math.max(0, Math.floor((Number(player.coins) || 0) / LEVELUP_COST));
+    const currentValue = Math.min(Number(els.singleLevelupSlider.value) || 0, maxAdditionalLevels);
+
+    els.singleLevelupSlider.max = String(maxAdditionalLevels);
+    els.singleLevelupSlider.value = String(currentValue);
+    els.singleLevelupMax.innerText = `最大 +${maxAdditionalLevels}`;
+    els.singleLevelupCost.innerText = `消費コイン：${currentValue * LEVELUP_COST}`;
+    els.singleLevelupConfirmBtn.disabled = currentValue <= 0;
+    els.singleLevelupConfirmBtn.style.opacity = currentValue > 0 ? "1" : ".5";
+
+}
+
+function openSingleLevelupPanel() {
+
+    if (!selectedItemId) return;
+
+    els.singleLevelupPanel.style.display = "block";
+    els.singleLevelupSlider.value = "0";
+    renderSingleLevelupPanel();
+
+}
+
+async function handleSingleLevelup() {
+
+    const player = getPlayerData();
+    if (!player || !selectedItemId) return;
+
+    const additionalLevels = Number(els.singleLevelupSlider.value) || 0;
+    if (additionalLevels <= 0) return;
+
+    const cost = additionalLevels * LEVELUP_COST;
+    if ((Number(player.coins) || 0) < cost) {
+        alert(`コインが足りません。(必要コイン: ${cost})`);
+        renderSingleLevelupPanel();
+        return;
+    }
+
+    const items = (player.inventory || []).map(normalizeItem);
+    const item = items.find((it) => it.id === selectedItemId);
+    if (!item) return;
+
+    player.coins -= cost;
+    item.level += additionalLevels;
+    player.inventory = items;
+
+    await saveGame();
+
+    hideSingleLevelupPanel();
+    renderItemDetail();
+    renderEquipment(player);
+
 }
 
 function renderItemDetail() {
@@ -292,6 +370,9 @@ window.addEventListener("DOMContentLoaded", () => {
 
     els.detailCloseBtn.addEventListener("click", closeItemDetail);
     els.detailLevelupBtn.addEventListener("click", handleLevelUp);
+    els.detailSingleLevelupBtn.addEventListener("click", openSingleLevelupPanel);
+    els.singleLevelupSlider.addEventListener("input", renderSingleLevelupPanel);
+    els.singleLevelupConfirmBtn.addEventListener("click", handleSingleLevelup);
     els.detailEquipBtn.addEventListener("click", handleEquipToggle);
 
 });

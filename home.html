@@ -2189,7 +2189,18 @@
 
             <div class="profile-edit-actions" style="margin-top: 18px;">
                 <button id="equipment-detail-levelup-btn" class="primary-btn-small">レベルアップ</button>
+                <button id="equipment-detail-single-levelup-btn" class="primary-btn-small" style="background:#7b1fa2;">一択レベルアップ</button>
                 <button id="equipment-detail-equip-btn" class="primary-btn-small">装備する</button>
+            </div>
+
+            <div id="equipment-single-levelup-panel" style="display:none; margin-top:18px; padding:14px; border:2px solid #ce93d8; border-radius:16px; background:#faf5ff; text-align:left;">
+                <div style="font-weight:900; color:#6a1b9a; margin-bottom:10px;">追加するレベル</div>
+                <input id="equipment-single-levelup-slider" type="range" min="0" max="0" step="1" value="0" style="width:100%; accent-color:#8e24aa;">
+                <div style="display:flex; justify-content:space-between; font-size:12px; color:#6a1b9a; margin-top:4px;">
+                    <span>0</span><span id="equipment-single-levelup-max">最大 +0</span>
+                </div>
+                <div id="equipment-single-levelup-cost" style="text-align:right; font-weight:900; color:#6a1b9a; margin-top:8px;">消費コイン：0</div>
+                <button id="equipment-single-levelup-confirm-btn" class="primary-btn-small" style="width:100%; margin-top:10px; background:#8e24aa;">レベルアップする</button>
             </div>
 
             <button id="equipment-detail-close-btn" class="secondary-btn" style="margin-top: 14px;">閉じる</button>
@@ -2386,7 +2397,7 @@
     <script type="module" src="screenNav.js?v=2"></script>
     <script type="module" src="game.js?v=2"></script>
     <script type="module" src="gacha.js?v=2"></script>
-    <script type="module" src="equipment.js?v=2"></script>
+    <script type="module" src="equipment.js?v=3"></script>
     <script type="module" src="storage.js?v=2"></script>
     <script type="module" src="profile.js?v=3"></script>
     <script type="module" src="gift.js?v=1"></script>
