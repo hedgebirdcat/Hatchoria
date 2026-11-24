@@ -130,6 +130,12 @@ body{
     box-shadow:0 8px 20px rgba(255,216,77,.4);
 }
 
+.login-btn:disabled{
+    cursor:wait;
+    opacity:.65;
+    transform:none;
+}
+
 .register-btn{
     background:#4f80ff;
     color:white;

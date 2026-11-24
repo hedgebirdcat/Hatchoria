@@ -18,12 +18,21 @@ const loginForm = document.getElementById("loginForm");
 const email = document.getElementById("email");
 const password = document.getElementById("password");
 const message = document.getElementById("message");
+const loginButton = loginForm?.querySelector('button[type="submit"]');
 
 
 // ログイン
 loginForm.addEventListener("submit", async (e) => {
 
     e.preventDefault();
+
+    // Firebaseの応答待ちでも、ユーザーに処理中であることをすぐ表示する
+    if (loginButton) {
+        loginButton.disabled = true;
+        loginButton.textContent = "ログイン中…";
+    }
+    message.style.color = "#ffffff";
+    message.textContent = "ログインしています…";
 
     try {
 
@@ -62,11 +71,31 @@ loginForm.addEventListener("submit", async (e) => {
                 break;
 
             case "auth/wrong-password":
+            case "auth/invalid-credential":
                 message.textContent = "パスワードが違います";
+                break;
+
+            case "auth/user-disabled":
+                message.textContent = "このアカウントは無効になっています";
+                break;
+
+            case "auth/too-many-requests":
+                message.textContent = "試行回数が多すぎます。しばらくしてから再度お試しください";
+                break;
+
+            case "auth/network-request-failed":
+                message.textContent = "通信に失敗しました。ネットワーク接続を確認してください";
                 break;
 
             default:
                 message.textContent = "ログインに失敗しました";
+        }
+
+    } finally {
+
+        if (loginButton) {
+            loginButton.disabled = false;
+            loginButton.textContent = "ログイン";
         }
 
     }
