@@ -284,7 +284,7 @@ export async function claimLoginBonus(todayKey) {
         }
 
         const nextStreak = displayStreak === 7 ? 1 : displayStreak + 1;
-        const nextCoins = (Number(data.coins) || 0) + 150;
+        const nextCoins = (Number(data.coins) || 0) + 50;
 
         transaction.update(ref, {
             coins: nextCoins,
