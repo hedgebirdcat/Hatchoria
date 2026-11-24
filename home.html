@@ -217,6 +217,19 @@
             background: #e3f2fd;
             border-color: #90caf9;
         }
+        .logout-menu-btn {
+            color: #455a64;
+        }
+        .logout-icon {
+            width: 22px;
+            height: 22px;
+            flex: 0 0 22px;
+            fill: currentColor;
+        }
+        .logout-menu-btn:disabled {
+            cursor: wait;
+            opacity: .65;
+        }
 
         /* 📋 プロフィール画面用追加 */
         .profile-info-box {
@@ -1802,6 +1815,13 @@
                 <button id="menu-profile-btn" class="menu-list-btn">👤 プロフィール確認</button>
                 <button id="menu-friends-btn" class="menu-list-btn">🤝 フレンド</button>
                 <button id="menu-account-btn" class="menu-list-btn">👤 アカウント</button>
+                <button id="menu-logout-btn" class="menu-list-btn logout-menu-btn">
+                    <svg class="logout-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                        <path d="M4 4.5A2.5 2.5 0 0 1 6.5 2H12v2H6.5a.5.5 0 0 0-.5.5v15a.5.5 0 0 0 .5.5H12v2H6.5A2.5 2.5 0 0 1 4 19.5v-15Z"/>
+                        <path d="M13 7l1.4-1.4L20.9 12l-6.5 6.4L13 17l4-4H8v-2h9l-4-4Z"/>
+                    </svg>
+                    ログアウト
+                </button>
             </div>
             <button id="setting-menu-close-btn" class="secondary-btn">閉じる</button>
         </div>
@@ -2399,7 +2419,7 @@
     <script type="module" src="gacha.js?v=2"></script>
     <script type="module" src="equipment.js?v=3"></script>
     <script type="module" src="storage.js?v=2"></script>
-    <script type="module" src="profile.js?v=3"></script>
+    <script type="module" src="profile.js?v=4"></script>
     <script type="module" src="gift.js?v=1"></script>
     <script type="module" src="friends.js?v=2"></script>
     <script type="module" src="match.js?v=2"></script>

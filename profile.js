@@ -11,7 +11,10 @@
 import { getPlayerData, saveGame } from "./save.js";
 import { deletePlayerAccountData, registerFriendCode } from "./gameFirebase.js";
 import { auth } from "./firebase.js";
-import { deleteUser } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
+import {
+    deleteUser,
+    signOut
+} from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
 
 const DEFAULT_MONSTER = "leaf";
 const DEFAULT_GOAL = 50;
@@ -45,6 +48,7 @@ function cacheElements() {
         settingMenuCloseBtn: document.getElementById("setting-menu-close-btn"),
         menuProfileBtn: document.getElementById("menu-profile-btn"),
         menuAccountBtn: document.getElementById("menu-account-btn"),
+        menuLogoutBtn: document.getElementById("menu-logout-btn"),
         accountOverlay: document.getElementById("account-overlay"),
         accountResetBtn: document.getElementById("account-reset-btn"),
         accountDeleteBtn: document.getElementById("account-delete-btn"),
@@ -192,6 +196,34 @@ function openSettingMenu() {
 
 function closeSettingMenu() {
     els.settingMenuOverlay.classList.remove("show");
+}
+
+async function logout() {
+
+    const ok = confirm("本当にログアウトしますか？");
+    if (!ok) return;
+
+    if (els.menuLogoutBtn) {
+        els.menuLogoutBtn.disabled = true;
+        els.menuLogoutBtn.textContent = "ログアウト中…";
+    }
+
+    try {
+        await signOut(auth);
+        window.location.replace("index.html");
+    } catch (error) {
+        console.error("ログアウトに失敗しました。", error);
+        if (els.menuLogoutBtn) {
+            els.menuLogoutBtn.disabled = false;
+            els.menuLogoutBtn.innerHTML = `
+                <svg class="logout-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                    <path d="M4 4.5A2.5 2.5 0 0 1 6.5 2H12v2H6.5a.5.5 0 0 0-.5.5v15a.5.5 0 0 0 .5.5H12v2H6.5A2.5 2.5 0 0 1 4 19.5v-15Z"/>
+                    <path d="M13 7l1.4-1.4L20.9 12l-6.5 6.4L13 17l4-4H8v-2h9l-4-4Z"/>
+                </svg>
+                ログアウト`;
+        }
+        alert("ログアウトに失敗しました。通信状態を確認してもう一度お試しください。");
+    }
 }
 
 // ======================================
@@ -509,6 +541,7 @@ window.addEventListener("DOMContentLoaded", () => {
     els.settingMenuCloseBtn.addEventListener("click", closeSettingMenu);
     els.menuProfileBtn.addEventListener("click", openProfile);
     els.menuAccountBtn.addEventListener("click", openAccount);
+    els.menuLogoutBtn.addEventListener("click", logout);
     els.accountResetBtn.addEventListener("click", resetSaveData);
     els.accountDeleteBtn.addEventListener("click", openAccountDeleteConfirmation);
     els.accountDeleteNameInput.addEventListener("input", updateAccountDeleteButton);
