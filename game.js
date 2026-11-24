@@ -14,7 +14,8 @@ import {
 import {
     loadSaveData,
     saveGame,
-    getPlayerData
+    getPlayerData,
+    claimLoginBonus
 } from "./save.js";
 
 import { registerFriendCode } from "./gameFirebase.js";
@@ -259,7 +260,7 @@ window.addEventListener("DOMContentLoaded", () => {
             // これにより「ゲーム画面のコイン」と「ホーム画面のコイン」が
             // 常に同じ数字になる(同じオブジェクトを見ているだけなので)。
             window.HatchoriaPlayer = player;
-            window.HatchoriaSave = { save: saveGame };
+            window.HatchoriaSave = { save: saveGame, claimLoginBonus };
             window.dispatchEvent(new Event("hatchoria:playerReady"));
 
             hideLoadingOverlay();

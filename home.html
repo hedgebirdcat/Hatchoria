@@ -2333,15 +2333,20 @@
                     claimButton.innerText = "保存中…";
 
                     if (window.HatchoriaPlayer) {
-                        window.HatchoriaPlayer.coins += 150;
-                        window.HatchoriaPlayer.loginStreak = loginStreak === 7 ? 1 : loginStreak + 1;
-                        window.HatchoriaPlayer.lastLoginDate = todayStr;
-
                         try {
-                            await window.HatchoriaSave.save();
+                            const result = await window.HatchoriaSave.claimLoginBonus(todayStr);
+
+                            if (!result.claimed) {
+                                document.getElementById("login-bonus-overlay").classList.remove("show");
+                                alert("本日のログイン報酬はすでに受け取り済みです。");
+                                return;
+                            }
+
+                            window.HatchoriaPlayer.coins = result.coins;
+                            window.HatchoriaPlayer.loginStreak = result.loginStreak;
+                            window.HatchoriaPlayer.lastLoginDate = todayStr;
                         } catch (error) {
                             console.error("ログインボーナスの保存に失敗しました。", error);
-                            window.HatchoriaPlayer.coins -= 150;
                             claimButton.disabled = false;
                             claimButton.innerText = "受け取る";
                             alert("ログインボーナスの保存に失敗しました。通信状態を確認してもう一度お試しください。");
@@ -2429,7 +2434,7 @@
         window.onload = () => { updateDisplay(); };
     </script>
     <script type="module" src="screenNav.js?v=2"></script>
-    <script type="module" src="game.js?v=3"></script>
+    <script type="module" src="game.js?v=4"></script>
     <script type="module" src="gacha.js?v=2"></script>
     <script type="module" src="equipment.js?v=3"></script>
     <script type="module" src="storage.js?v=2"></script>

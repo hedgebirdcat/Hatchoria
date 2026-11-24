@@ -6,8 +6,11 @@
 
 import {
     loadPlayerData,
-    saveAll
+    saveAll,
+    claimLoginBonus
 } from "./gameFirebase.js?v=2";
+
+export { claimLoginBonus };
 
 // ------------------------------
 // 現在のプレイヤーデータ

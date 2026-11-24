@@ -17,7 +17,8 @@ import {
     where,
     getDocs,
     addDoc,
-    onSnapshot
+    onSnapshot,
+    runTransaction
 } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
 
 
@@ -238,6 +239,66 @@ export async function saveAll({
     if (lastLoginDate !== undefined) data.lastLoginDate = lastLoginDate;
 
     await savePlayerData(data);
+
+}
+
+// ------------------------------
+// ログインボーナス受取(同日二重受取防止)
+// ------------------------------
+export async function claimLoginBonus(todayKey) {
+
+    const user = auth.currentUser;
+
+    if (!user) throw new Error("ログイン状態を確認できません。");
+
+    const ref = doc(db, "users", user.uid);
+
+    return runTransaction(db, async (transaction) => {
+
+        const snap = await transaction.get(ref);
+        if (!snap.exists()) throw new Error("プレイヤーデータが見つかりません。");
+
+        const data = snap.data();
+
+        // Firestore上の日付を確認するため、再読み込み・別端末でも同日受取を拒否する。
+        if (data.lastLoginDate === todayKey) {
+            return { claimed: false, coins: data.coins || 0, loginStreak: data.loginStreak || 1 };
+        }
+
+        let displayStreak = Math.min(7, Math.max(1, Number(data.loginStreak) || 1));
+        const previousKey = data.lastLoginDate;
+
+        if (previousKey) {
+            const today = todayKey.split("-").map(Number);
+            const previous = previousKey.split("-").map(Number);
+            const diffDays = Math.floor(
+                (Date.UTC(today[0], today[1] - 1, today[2]) -
+                    Date.UTC(previous[0], previous[1] - 1, previous[2])) /
+                (1000 * 60 * 60 * 24)
+            );
+
+            if (diffDays === 1) displayStreak = Math.min(7, displayStreak + 1);
+            else if (diffDays > 1) displayStreak = 1;
+        } else {
+            displayStreak = 1;
+        }
+
+        const nextStreak = displayStreak === 7 ? 1 : displayStreak + 1;
+        const nextCoins = (Number(data.coins) || 0) + 150;
+
+        transaction.update(ref, {
+            coins: nextCoins,
+            loginStreak: nextStreak,
+            lastLoginDate: todayKey
+        });
+
+        return {
+            claimed: true,
+            coins: nextCoins,
+            loginStreak: nextStreak,
+            displayStreak
+        };
+    });
 
 }
 
