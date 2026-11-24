@@ -13,10 +13,12 @@ body{
     min-height:100vh;
     display:flex;
     justify-content:center;
-    align-items:center;
+    align-items:flex-start;
     background:linear-gradient(180deg,#0c1635,#193b8d);
     color:white;
-    overflow:hidden;
+    overflow-x:hidden;
+    overflow-y:auto;
+    padding:24px 0 70px;
 }
 
 .background{
@@ -31,6 +33,7 @@ body{
 .login-container{
     width:430px;
     max-width:90%;
+    margin:0 auto;
     background:rgba(255,255,255,.08);
     backdrop-filter:blur(12px);
     border-radius:25px;
@@ -86,6 +89,15 @@ body{
 
 .input-group input:focus{
     box-shadow:0 0 0 3px #5b8cff;
+}
+
+.verification-note{
+    margin-top:8px;
+    color:#fff;
+    font-size:12px;
+    line-height:1.5;
+    text-align:left;
+    opacity:.9;
 }
 
 .remember{
