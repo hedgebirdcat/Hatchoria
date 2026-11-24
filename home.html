@@ -2280,7 +2280,7 @@
         // 単語出題・クイズ判定は game.js が担当するため、
         // ここには quizData は置かない
 
-        let loginStreak = 1; 
+        let loginStreak = 1;
 
         // レベル・XP・コインは game.js が読み込む Firestore のプレイヤー
         // データ(window.HatchoriaPlayer)を直接参照する。
@@ -2288,38 +2288,37 @@
         // ガチャ機能(rewards・inventory等)は gacha.js に分離済み。
         // アカウント名・フレンドコード・設定メニューは profile.js に分離済み。
 
-        function saveGameData() {
-            const dataToSave = {
-                loginStreak: loginStreak,
-                lastLoginDate: localStorage.getItem("egg_game_last_login") 
-            };
-            localStorage.setItem("egg_game_save", JSON.stringify(dataToSave));
+        function getDateKey(date = new Date()) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, "0");
+            const day = String(date.getDate()).padStart(2, "0");
+            return `${year}-${month}-${day}`;
         }
 
-        function loadGameData() {
-            const savedData = localStorage.getItem("egg_game_save");
-            if (savedData) {
-                try {
-                    const parsed = JSON.parse(savedData);
-                    if (parsed.loginStreak !== undefined) loginStreak = parsed.loginStreak;
-                } catch(e) { console.error(e); }
-            }
+        function getDateKeyDifference(todayKey, previousKey) {
+            const today = todayKey.split("-").map(Number);
+            const previous = previousKey.split("-").map(Number);
+            const todayTime = Date.UTC(today[0], today[1] - 1, today[2]);
+            const previousTime = Date.UTC(previous[0], previous[1] - 1, previous[2]);
+            return Math.floor((todayTime - previousTime) / (1000 * 60 * 60 * 24));
         }
 
         function checkLoginBonus() {
             if (!window.HatchoriaPlayer || !window.HatchoriaPlayer.friendCode) return;
 
-            const todayStr = new Date().toLocaleDateString(); 
-            const lastLoginStr = localStorage.getItem("egg_game_last_login");
+            const todayStr = getDateKey();
+            const lastLoginStr = window.HatchoriaPlayer.lastLoginDate || null;
+
+            loginStreak = Math.min(7, Math.max(1, Number(window.HatchoriaPlayer.loginStreak) || 1));
 
             if (!lastLoginStr || lastLoginStr !== todayStr) {
                 if (lastLoginStr) {
-                    const todayTime = new Date(todayStr).getTime();
-                    const lastLoginTime = new Date(lastLoginStr).getTime();
-                    const diffDays = Math.floor((todayTime - lastLoginTime) / (1000 * 60 * 60 * 24));
+                    const diffDays = getDateKeyDifference(todayStr, lastLoginStr);
                     if (diffDays === 1) loginStreak++;
                     else if (diffDays > 1) loginStreak = 1;
                 } else { loginStreak = 1; }
+
+                loginStreak = Math.min(7, loginStreak);
 
                 document.getElementById("bonus-days-display").innerText = `${loginStreak}日目`;
 
@@ -2328,14 +2327,29 @@
                     playFireworks(); 
                 }, 600);
 
-                document.getElementById("bonus-claim-btn").onclick = () => {
+                document.getElementById("bonus-claim-btn").onclick = async () => {
+                    const claimButton = document.getElementById("bonus-claim-btn");
+                    claimButton.disabled = true;
+                    claimButton.innerText = "保存中…";
+
                     if (window.HatchoriaPlayer) {
                         window.HatchoriaPlayer.coins += 150;
-                        window.HatchoriaSave.save();
+                        window.HatchoriaPlayer.loginStreak = loginStreak === 7 ? 1 : loginStreak + 1;
+                        window.HatchoriaPlayer.lastLoginDate = todayStr;
+
+                        try {
+                            await window.HatchoriaSave.save();
+                        } catch (error) {
+                            console.error("ログインボーナスの保存に失敗しました。", error);
+                            window.HatchoriaPlayer.coins -= 150;
+                            claimButton.disabled = false;
+                            claimButton.innerText = "受け取る";
+                            alert("ログインボーナスの保存に失敗しました。通信状態を確認してもう一度お試しください。");
+                            return;
+                        }
                     }
-                    localStorage.setItem("egg_game_last_login", todayStr); 
                     document.getElementById("login-bonus-overlay").classList.remove("show");
-                    saveGameData(); updateDisplay();
+                    updateDisplay();
                 };
             }
         }
@@ -2412,10 +2426,10 @@
             checkLoginBonus();
         });
 
-        window.onload = () => { loadGameData(); updateDisplay(); };
+        window.onload = () => { updateDisplay(); };
     </script>
     <script type="module" src="screenNav.js?v=2"></script>
-    <script type="module" src="game.js?v=2"></script>
+    <script type="module" src="game.js?v=3"></script>
     <script type="module" src="gacha.js?v=2"></script>
     <script type="module" src="equipment.js?v=3"></script>
     <script type="module" src="storage.js?v=2"></script>

@@ -7,7 +7,7 @@
 import {
     loadPlayerData,
     saveAll
-} from "./gameFirebase.js";
+} from "./gameFirebase.js?v=2";
 
 // ------------------------------
 // 現在のプレイヤーデータ

@@ -205,11 +205,13 @@ export async function saveAll({
     nameChangeCount,
     equippedItemId,
     storage,
-    starterChosen
+    starterChosen,
+    loginStreak,
+    lastLoginDate
 
 }) {
 
-    await savePlayerData({
+    const data = {
 
         accountName,
         level,
@@ -228,7 +230,14 @@ export async function saveAll({
         storage,
         starterChosen
 
-    });
+    };
+
+    // 既存ユーザーにundefinedを保存してFirestoreエラーを起こさないよう、
+    // ログインボーナス項目は値がある場合だけ追加する。
+    if (loginStreak !== undefined) data.loginStreak = loginStreak;
+    if (lastLoginDate !== undefined) data.lastLoginDate = lastLoginDate;
+
+    await savePlayerData(data);
 
 }
 
