@@ -1239,47 +1239,91 @@
         }
         @keyframes popIn { 0% { transform: scale(0.8); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
 
-        /* ==========================================================================
-           🎁 ログインボーナス用ポップアップ
-           ========================================================================== */
-        #login-bonus-overlay {
-            position: fixed;
-            top: 0; left: 0;
-            width: 100vw; height: 100vh;
-            background: rgba(0, 0, 0, 0.6);
-            backdrop-filter: blur(4px);
-            z-index: 20000;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.4s ease;
+        /* デイリーログインボーナス専用画面 */
+        #daily-login-bonus-screen {
+            display: none;
+            background: linear-gradient(160deg, #fff8e1, #ffe0b2);
+            color: #4e342e;
         }
-        #login-bonus-overlay.show {
-            opacity: 1;
-            pointer-events: auto;
-        }
-        .bonus-card {
-            background: white;
-            width: 90%;
-            max-width: 420px;
-            border-radius: 30px;
-            padding: 30px;
+        .daily-login-bonus-content {
+            width: 88%;
+            max-width: 520px;
+            margin: 0 auto;
+            padding-top: 86px;
             text-align: center;
-            box-shadow: 0 15px 40px rgba(0,0,0,0.3);
-            transform: translateY(-40px) scale(0.7); 
-            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            border: 4px solid #fff176;
         }
-        #login-bonus-overlay.show .bonus-card { transform: translateY(-40px) scale(1); } 
-        .bonus-title { font-size: 26px; font-weight: 900; color: #ff9800; margin-bottom: 5px; }
-        .bonus-subtitle { font-size: 14px; color: #666; margin-bottom: 20px; }
-        .bonus-days-counter { font-size: 28px; font-weight: 800; color: #d32f2f; margin-bottom: 5px; }
-        .bonus-gift-box { font-size: 70px; margin-bottom: 15px; animation: giftWobble 2s ease infinite; display: inline-block; }
-        @keyframes giftWobble { 0%, 100% { transform: rotate(0deg) scale(1); } 5%, 15% { transform: rotate(-8deg) scale(1.05); } 10%, 20% { transform: rotate(8deg) scale(1.05); } 25% { transform: rotate(0deg) scale(1); } }
-        .bonus-reward-text { font-size: 22px; font-weight: bold; color: #333; margin-bottom: 25px; background: #fff9c4; padding: 10px 20px; border-radius: 999px; display: inline-block; }
-        .bonus-close-btn { background: linear-gradient(135deg, #ffb74d, #ff9800); color: white; border: none; padding: 14px 45px; font-size: 18px; font-weight: bold; border-radius: 999px; cursor: pointer; }
+        .daily-login-bonus-content h1 {
+            margin: 0;
+            text-align: left;
+            font-size: clamp(26px, 7vw, 42px);
+            font-weight: 900;
+            color: #e65100;
+        }
+        .daily-login-bonus-content p {
+            margin: 8px 0 0;
+            text-align: left;
+            font-size: 14px;
+            color: #795548;
+        }
+        .daily-login-bonus-coin {
+            margin: 15vh auto 28px;
+            font-size: 112px;
+            line-height: 1;
+            filter: drop-shadow(0 8px 8px rgba(121,85,72,.25));
+            animation: dailyCoinFloat 2.4s ease-in-out infinite;
+        }
+        @keyframes dailyCoinFloat {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        #daily-login-bonus-claim-btn {
+            min-width: 220px;
+            padding: 16px 42px;
+            border: none;
+            border-radius: 999px;
+            background: linear-gradient(135deg, #ffb300, #f57c00);
+            color: white;
+            font-size: 20px;
+            font-weight: 900;
+            box-shadow: 0 6px 14px rgba(230,81,0,.25);
+            cursor: pointer;
+        }
+        #daily-login-bonus-claim-btn:disabled {
+            background: #bdbdbd;
+            box-shadow: none;
+            cursor: default;
+        }
+        #daily-login-bonus-status {
+            min-height: 22px;
+            margin: 0 0 12px;
+            color: #8d6e63;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        #daily-login-bonus-popup {
+            position: fixed;
+            inset: 0;
+            z-index: 65000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0,0,0,.45);
+            cursor: pointer;
+        }
+        #daily-login-bonus-popup.show { display: flex; }
+        .daily-login-bonus-popup-card {
+            width: 78%;
+            max-width: 360px;
+            padding: 30px 22px;
+            border-radius: 24px;
+            background: white;
+            color: #e65100;
+            text-align: center;
+            font-size: 24px;
+            font-weight: 900;
+            box-shadow: 0 10px 30px rgba(0,0,0,.3);
+            cursor: pointer;
+        }
 
         /* ==========================================================================
            2. SELECTION SCREEN (選択画面)
@@ -2037,17 +2081,8 @@
         </div>
     </div>
 
-    <div id="login-bonus-overlay">
-        <div class="bonus-card">
-            <div class="bonus-title">🎉 デイリーボーナス！</div>
-            <div class="bonus-subtitle">今日もゲームを開いてくれてありがとう！</div>
-            <div id="bonus-days-display" class="bonus-days-counter">1日目</div>
-            <div class="bonus-gift-box">🎁</div>
-            <br>
-            <div class="bonus-reward-text">🪙 +150 コイン 獲得！</div>
-            <br>
-            <button id="bonus-claim-btn" class="bonus-close-btn">受け取る</button>
-        </div>
+    <div id="daily-login-bonus-popup" aria-label="ログインボーナス受取完了">
+        <div class="daily-login-bonus-popup-card">50コイン受け取りました</div>
     </div>
 
     <div id="home-screen" class="screen">
@@ -2090,8 +2125,18 @@
                 <button id="home-gacha-btn" class="circle-menu-btn" data-label="ガチャ">📦</button>
                 <button id="home-equipment-btn" class="circle-menu-btn" data-label="装備">⚔️</button>
                 <button id="home-storage-btn" class="circle-menu-btn" data-label="貯蔵庫">🗄️</button>
-                <button class="circle-menu-btn dummy-btn" data-label="準備中">🔒</button>
             </div>
+        </div>
+    </div>
+
+    <div id="daily-login-bonus-screen" class="screen">
+        <button id="daily-login-bonus-back-btn" class="nav-btn">ホームへ</button>
+        <div class="daily-login-bonus-content">
+            <h1>デイリーログインボーナス</h1>
+            <p>毎日受け取れます（0時00分に更新）</p>
+            <div class="daily-login-bonus-coin" aria-label="コイン">🪙</div>
+            <div id="daily-login-bonus-status"></div>
+            <button id="daily-login-bonus-claim-btn">受け取る</button>
         </div>
     </div>
 
@@ -2303,59 +2348,108 @@
             return Math.floor((todayTime - previousTime) / (1000 * 60 * 60 * 24));
         }
 
-        function checkLoginBonus() {
-            if (!window.HatchoriaPlayer || !window.HatchoriaPlayer.friendCode) return;
+        function updateDailyLoginBonusScreen() {
+            const claimButton = document.getElementById("daily-login-bonus-claim-btn");
+            const status = document.getElementById("daily-login-bonus-status");
+            const player = window.HatchoriaPlayer;
+
+            if (!claimButton || !status) return;
+
+            if (!player || !player.friendCode) {
+                claimButton.disabled = true;
+                status.innerText = "アカウント情報を読み込んでいます…";
+                return;
+            }
 
             const todayStr = getDateKey();
-            const lastLoginStr = window.HatchoriaPlayer.lastLoginDate || null;
+            const lastLoginStr = player.lastLoginDate || null;
+            loginStreak = Math.min(7, Math.max(1, Number(player.loginStreak) || 1));
 
-            loginStreak = Math.min(7, Math.max(1, Number(window.HatchoriaPlayer.loginStreak) || 1));
+            if (lastLoginStr === todayStr) {
+                claimButton.disabled = true;
+                claimButton.innerText = "受け取り済み";
+                status.innerText = "本日のログインボーナスは受け取り済みです。";
+                return;
+            }
 
-            if (!lastLoginStr || lastLoginStr !== todayStr) {
-                if (lastLoginStr) {
-                    const diffDays = getDateKeyDifference(todayStr, lastLoginStr);
-                    if (diffDays === 1) loginStreak++;
-                    else if (diffDays > 1) loginStreak = 1;
-                } else { loginStreak = 1; }
+            if (lastLoginStr) {
+                const diffDays = getDateKeyDifference(todayStr, lastLoginStr);
+                if (diffDays === 1) loginStreak = Math.min(7, loginStreak + 1);
+                else if (diffDays > 1) loginStreak = 1;
+            } else {
+                loginStreak = 1;
+            }
 
-                loginStreak = Math.min(7, loginStreak);
+            claimButton.disabled = false;
+            claimButton.innerText = "受け取る";
+            status.innerText = `${loginStreak}日目の報酬：50コイン`;
+        }
 
-                document.getElementById("bonus-days-display").innerText = `${loginStreak}日目`;
+        async function claimDailyLoginBonus() {
+            const claimButton = document.getElementById("daily-login-bonus-claim-btn");
+            const status = document.getElementById("daily-login-bonus-status");
+            const popup = document.getElementById("daily-login-bonus-popup");
+            const player = window.HatchoriaPlayer;
 
-                setTimeout(() => {
-                    document.getElementById("login-bonus-overlay").classList.add("show");
-                    playFireworks(); 
-                }, 600);
+            if (!claimButton || !popup || !player) return;
 
-                document.getElementById("bonus-claim-btn").onclick = async () => {
-                    const claimButton = document.getElementById("bonus-claim-btn");
-                    claimButton.disabled = true;
-                    claimButton.innerText = "保存中…";
+            const todayStr = getDateKey();
+            claimButton.disabled = true;
+            claimButton.innerText = "保存中…";
 
-                    if (window.HatchoriaPlayer) {
-                        try {
-                            const result = await window.HatchoriaSave.claimLoginBonus(todayStr);
+            try {
+                const result = await window.HatchoriaSave.claimLoginBonus(todayStr);
 
-                            if (!result.claimed) {
-                                document.getElementById("login-bonus-overlay").classList.remove("show");
-                                alert("本日のログイン報酬はすでに受け取り済みです。");
-                                return;
-                            }
+                if (!result.claimed) {
+                    updateDailyLoginBonusScreen();
+                    return;
+                }
 
-                            window.HatchoriaPlayer.coins = result.coins;
-                            window.HatchoriaPlayer.loginStreak = result.loginStreak;
-                            window.HatchoriaPlayer.lastLoginDate = todayStr;
-                        } catch (error) {
-                            console.error("ログインボーナスの保存に失敗しました。", error);
-                            claimButton.disabled = false;
-                            claimButton.innerText = "受け取る";
-                            alert("ログインボーナスの保存に失敗しました。通信状態を確認してもう一度お試しください。");
-                            return;
-                        }
-                    }
-                    document.getElementById("login-bonus-overlay").classList.remove("show");
-                    updateDisplay();
-                };
+                player.coins = result.coins;
+                player.loginStreak = result.loginStreak;
+                player.lastLoginDate = todayStr;
+                updateDisplay();
+
+                popup.classList.add("show");
+            } catch (error) {
+                console.error("ログインボーナスの保存に失敗しました。", error);
+                claimButton.disabled = false;
+                claimButton.innerText = "受け取る";
+                status.innerText = "保存に失敗しました。もう一度お試しください。";
+            }
+        }
+
+        function closeDailyLoginBonusPopup() {
+            const popup = document.getElementById("daily-login-bonus-popup");
+            popup.classList.remove("show");
+
+            // ポップアップが消えてから約0.5秒後に専用画面を閉じる
+            setTimeout(() => {
+                if (window.HatchoriaNav && window.HatchoriaNav.getCurrentScreen() === "dailyBonus") {
+                    window.HatchoriaNav.goHome();
+                }
+            }, 500);
+        }
+
+        document.getElementById("daily-login-bonus-claim-btn")
+            ?.addEventListener("click", claimDailyLoginBonus);
+        document.getElementById("daily-login-bonus-popup")
+            ?.addEventListener("click", closeDailyLoginBonusPopup);
+
+        let dailyBonusAutoOpened = false;
+
+        function openDailyLoginBonusIfNeeded() {
+            const player = window.HatchoriaPlayer;
+            if (dailyBonusAutoOpened || !player || !player.friendCode) return;
+
+            const todayStr = getDateKey();
+            if (player.lastLoginDate === todayStr) return;
+
+            dailyBonusAutoOpened = true;
+
+            if (window.HatchoriaNav) {
+                window.HatchoriaNav.showScreen("dailyBonus");
+                updateDailyLoginBonusScreen();
             }
         }
 
@@ -2428,12 +2522,14 @@
         // ログインボーナスも確認する
         window.addEventListener("hatchoria:playerReady", () => {
             updateDisplay();
-            checkLoginBonus();
+            openDailyLoginBonusIfNeeded();
         });
+
+        window.addEventListener("hatchoria:enterDailyBonus", updateDailyLoginBonusScreen);
 
         window.onload = () => { updateDisplay(); };
     </script>
-    <script type="module" src="screenNav.js?v=2"></script>
+    <script type="module" src="screenNav.js?v=4"></script>
     <script type="module" src="game.js?v=4"></script>
     <script type="module" src="gacha.js?v=2"></script>
     <script type="module" src="equipment.js?v=3"></script>

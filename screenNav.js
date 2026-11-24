@@ -25,7 +25,8 @@ const SCREENS = {
     gacha:         document.getElementById("gacha-screen"),
     friendProfile: document.getElementById("friend-profile-screen"),
     match:         document.getElementById("match-screen"),
-    matchGame:     document.getElementById("match-game-screen")
+    matchGame:     document.getElementById("match-game-screen"),
+    dailyBonus:   document.getElementById("daily-login-bonus-screen")
 };
 
 let currentScreen = "home";
@@ -99,6 +100,10 @@ document.getElementById("home-gacha-btn")
 
 // ガチャ画面 → ホームに戻る
 document.getElementById("gacha-back-btn")
+    ?.addEventListener("click", goHome);
+
+// デイリーログインボーナス画面 → ホーム
+document.getElementById("daily-login-bonus-back-btn")
     ?.addEventListener("click", goHome);
 
 // フレンドプロフィール画面 → ホームに戻る
