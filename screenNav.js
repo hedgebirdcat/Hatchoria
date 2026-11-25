@@ -26,6 +26,7 @@ const SCREENS = {
     friendProfile: document.getElementById("friend-profile-screen"),
     match:         document.getElementById("match-screen"),
     matchGame:     document.getElementById("match-game-screen"),
+    ranking:       document.getElementById("ranking-screen"),
     dailyBonus:   document.getElementById("daily-login-bonus-screen")
 };
 
@@ -97,6 +98,20 @@ document.getElementById("home-gacha-btn")
         window.dispatchEvent(new Event("hatchoria:enterGacha"));
 
     });
+
+// ホーム → ランキング画面
+const rankingDiamond = document.getElementById("home-ranking-diamond");
+rankingDiamond?.addEventListener("click", () => showScreen("ranking"));
+rankingDiamond?.addEventListener("keydown", (event) => {
+    if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        showScreen("ranking");
+    }
+});
+
+// ランキング画面 → ホーム
+document.getElementById("ranking-back-btn")
+    ?.addEventListener("click", goHome);
 
 // ガチャ画面 → ホームに戻る
 document.getElementById("gacha-back-btn")
