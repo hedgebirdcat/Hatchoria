@@ -9,9 +9,11 @@ import {
     collection,
     query,
     where,
-    getDocs
+    getDocs,
+    doc,
+    getDoc
 } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
-import { sendFriendRequest } from "./gameFirebase.js";
+import { sendFriendRequest, getFriends } from "./gameFirebase.js";
 import { getPlayerData } from "./save.js";
 
 const METRICS = {
@@ -32,6 +34,7 @@ const JAPAN_TIME_ZONE = "Asia/Tokyo";
 const WEEKDAYS = ["日", "月", "火", "水", "木", "金", "土"];
 let loadedPeriodKey = "";
 let requestSerial = 0;
+let friendRequestSerial = 0;
 let friendRequestTarget = null;
 
 function getJapanDate() {
@@ -148,10 +151,42 @@ async function loadOverallRanking(metric) {
     }
 }
 
+function sortRankingUsers(users, metric) {
+    users.sort((a, b) => {
+        const difference = (Number(b[METRICS[metric].field]) || 0) - (Number(a[METRICS[metric].field]) || 0);
+        return difference || String(a.accountName || "").localeCompare(String(b.accountName || ""), "ja");
+    });
+    return users;
+}
+
+async function loadFriendRanking(metric) {
+    const periodKey = getWeeklyPeriodKey();
+    const serial = ++friendRequestSerial;
+    setActiveTab("friend", metric);
+    renderMessage("friend", "ランキングを読み込んでいます…");
+
+    try {
+        const friends = await getFriends();
+        const uniqueFriends = [...new Map(friends.map((friend) => [friend.uid, friend])).values()];
+        const snapshots = await Promise.all(uniqueFriends.map((friend) => getDoc(doc(db, "users", friend.uid))));
+        if (serial !== friendRequestSerial) return;
+
+        const users = snapshots
+            .filter((snapshot) => snapshot.exists())
+            .map((snapshot) => ({ uid: snapshot.id, ...snapshot.data() }))
+            .filter((user) => user.weeklyPeriodKey === periodKey);
+
+        renderRows("friend", sortRankingUsers(users, metric).slice(0, 20), metric);
+    } catch (error) {
+        console.error("フレンドランキングの取得に失敗しました。", error);
+        renderMessage("friend", "フレンドランキングを取得できませんでした。");
+    }
+}
+
 function updateRankingPanel(scope, metric) {
     setActiveTab(scope, metric);
     if (scope === "overall") loadOverallRanking(metric);
-    else renderMessage(scope, "フレンドランキングは準備中です。");
+    else loadFriendRanking(metric);
 }
 
 function ensureFriendRequestModal() {
@@ -240,13 +275,18 @@ window.addEventListener("DOMContentLoaded", () => {
 });
 
 window.addEventListener("hatchoria:playerReady", () => {
-    if (document.getElementById("ranking-screen")?.style.display !== "none") loadOverallRanking("coins");
+    if (document.getElementById("ranking-screen")?.style.display !== "none") {
+        loadOverallRanking("coins");
+        loadFriendRanking("coins");
+    }
 });
 
 window.addEventListener("hatchoria:screenChanged", (event) => {
     if (event.detail?.screen !== "ranking") return;
     updateWeeklyPeriod();
     const metric = document.querySelector('.ranking-tab[data-ranking-scope="overall"].active')?.dataset.rankingMetric || "coins";
+    const friendMetric = document.querySelector('.ranking-tab[data-ranking-scope="friend"].active')?.dataset.rankingMetric || "coins";
     if (loadedPeriodKey !== getWeeklyPeriodKey()) loadOverallRanking(metric);
     else setActiveTab("overall", metric);
+    loadFriendRanking(friendMetric);
 });
