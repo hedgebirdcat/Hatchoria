@@ -57,6 +57,43 @@ function getMonsterStage(level) {
 
 }
 
+function getWeeklyPeriodKey() {
+
+    const parts = new Intl.DateTimeFormat("en-US", {
+        timeZone: "Asia/Tokyo",
+        year: "numeric",
+        month: "numeric",
+        day: "numeric"
+    }).formatToParts(new Date());
+    const values = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+    const date = new Date(Date.UTC(
+        Number(values.year),
+        Number(values.month) - 1,
+        Number(values.day)
+    ));
+    date.setUTCDate(date.getUTCDate() - ((date.getUTCDay() + 6) % 7));
+
+    return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, "0")}-${String(date.getUTCDate()).padStart(2, "0")}`;
+
+}
+
+function prepareWeeklyStats() {
+
+    const periodKey = getWeeklyPeriodKey();
+
+    if (player.weeklyPeriodKey !== periodKey) {
+        player.weeklyPeriodKey = periodKey;
+        player.weeklyCoins = 0;
+        player.weeklyExp = 0;
+        player.weeklyLevels = 0;
+    } else {
+        player.weeklyCoins = Number(player.weeklyCoins) || 0;
+        player.weeklyExp = Number(player.weeklyExp) || 0;
+        player.weeklyLevels = Number(player.weeklyLevels) || 0;
+    }
+
+}
+
 // ======================================
 // ゲーム状態(このセッションのみ・保存対象外)
 // ======================================
@@ -239,6 +276,8 @@ window.addEventListener("DOMContentLoaded", () => {
             if (player.equippedItemId === undefined) {
                 player.equippedItemId = null;
             }
+
+            prepareWeeklyStats();
 
             // リロード・再訪問時も前回のコンボを引き継げるように、
             // Firestoreに保存されていたコンボを「継続確認の対象」としてセットしておく。
@@ -498,6 +537,9 @@ function handleCorrect() {
     // 装備中アイテムのXPボーナスを適用
     gainedXP = Math.round(gainedXP * (1 + bonus.xpBonus));
 
+    prepareWeeklyStats();
+    player.weeklyExp += gainedXP;
+
     let popupText = `+${gainedXP} XP`;
 
     if (isBonusStage) {
@@ -520,6 +562,8 @@ function handleCorrect() {
         player.level++;
         player.goal += 10;
         player.coins += levelupCoinReward;
+        player.weeklyCoins += levelupCoinReward;
+        player.weeklyLevels++;
         roundCoinsEarned += levelupCoinReward;
 
     }

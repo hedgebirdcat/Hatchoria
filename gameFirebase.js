@@ -208,7 +208,11 @@ export async function saveAll({
     storage,
     starterChosen,
     loginStreak,
-    lastLoginDate
+    lastLoginDate,
+    weeklyPeriodKey,
+    weeklyCoins,
+    weeklyExp,
+    weeklyLevels
 
 }) {
 
@@ -237,6 +241,10 @@ export async function saveAll({
     // ログインボーナス項目は値がある場合だけ追加する。
     if (loginStreak !== undefined) data.loginStreak = loginStreak;
     if (lastLoginDate !== undefined) data.lastLoginDate = lastLoginDate;
+    if (weeklyPeriodKey !== undefined) data.weeklyPeriodKey = weeklyPeriodKey;
+    if (weeklyCoins !== undefined) data.weeklyCoins = weeklyCoins;
+    if (weeklyExp !== undefined) data.weeklyExp = weeklyExp;
+    if (weeklyLevels !== undefined) data.weeklyLevels = weeklyLevels;
 
     await savePlayerData(data);
 
@@ -259,6 +267,12 @@ export async function claimLoginBonus(todayKey) {
         if (!snap.exists()) throw new Error("プレイヤーデータが見つかりません。");
 
         const data = snap.data();
+
+        const dateParts = todayKey.split("-").map(Number);
+        const weekDate = new Date(Date.UTC(dateParts[0], dateParts[1] - 1, dateParts[2]));
+        const daysSinceMonday = (weekDate.getUTCDay() + 6) % 7;
+        weekDate.setUTCDate(weekDate.getUTCDate() - daysSinceMonday);
+        const periodKey = `${weekDate.getUTCFullYear()}-${String(weekDate.getUTCMonth() + 1).padStart(2, "0")}-${String(weekDate.getUTCDate()).padStart(2, "0")}`;
 
         // Firestore上の日付を確認するため、再読み込み・別端末でも同日受取を拒否する。
         if (data.lastLoginDate === todayKey) {
@@ -285,18 +299,25 @@ export async function claimLoginBonus(todayKey) {
 
         const nextStreak = displayStreak === 7 ? 1 : displayStreak + 1;
         const nextCoins = (Number(data.coins) || 0) + 50;
+        const weeklyCoins = data.weeklyPeriodKey === periodKey
+            ? (Number(data.weeklyCoins) || 0) + 50
+            : 50;
 
         transaction.update(ref, {
             coins: nextCoins,
             loginStreak: nextStreak,
-            lastLoginDate: todayKey
+            lastLoginDate: todayKey,
+            weeklyPeriodKey: periodKey,
+            weeklyCoins
         });
 
         return {
             claimed: true,
             coins: nextCoins,
             loginStreak: nextStreak,
-            displayStreak
+            displayStreak,
+            weeklyPeriodKey: periodKey,
+            weeklyCoins
         };
     });
 
