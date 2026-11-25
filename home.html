@@ -828,6 +828,45 @@
             font-size: clamp(20px, 4vw, 28px);
             font-weight: 900;
         }
+        .ranking-period-note {
+            margin-top: 6px;
+            color: #90a4ae;
+            font-size: 11px;
+        }
+        .ranking-tabs {
+            display: flex;
+            gap: 6px;
+            margin-top: 18px;
+        }
+        .ranking-tab {
+            flex: 1;
+            padding: 9px 4px;
+            border: 2px solid #cfd8dc;
+            border-radius: 999px;
+            background: #f5f7f8;
+            color: #607d8b;
+            font-size: 13px;
+            font-weight: 900;
+            cursor: pointer;
+        }
+        .ranking-tab.active {
+            border-color: #5c6bc0;
+            background: #5c6bc0;
+            color: white;
+        }
+        .ranking-list {
+            margin: 16px 0 0;
+            padding: 0;
+            list-style: none;
+            text-align: left;
+        }
+        .ranking-empty {
+            padding: 22px 8px;
+            color: #78909c;
+            font-size: 13px;
+            line-height: 1.7;
+            text-align: center;
+        }
         .ranking-panel.friend-ranking h2 { color: #00838f; }
         .ranking-panel.overall-ranking h2 { color: #f57c00; }
         .ranking-panel-note {
@@ -2190,11 +2229,27 @@
             <div class="ranking-columns">
                 <section class="ranking-panel friend-ranking" aria-label="フレンドランキング">
                     <h2>フレンドランキング</h2>
-                    <div class="ranking-panel-note">フレンドのランキングを表示します。</div>
+                    <div class="ranking-period-note">集計期間：月曜0:00〜日曜23:59:59</div>
+                    <div class="ranking-tabs" role="tablist" aria-label="フレンドランキング指標">
+                        <button class="ranking-tab active" data-ranking-scope="friend" data-ranking-metric="coins" role="tab" aria-selected="true">コイン</button>
+                        <button class="ranking-tab" data-ranking-scope="friend" data-ranking-metric="exp" role="tab" aria-selected="false">経験値</button>
+                        <button class="ranking-tab" data-ranking-scope="friend" data-ranking-metric="levels" role="tab" aria-selected="false">レベル</button>
+                    </div>
+                    <ol id="friend-ranking-list" class="ranking-list">
+                        <li class="ranking-empty">今週のコインランキングを表示します。</li>
+                    </ol>
                 </section>
                 <section class="ranking-panel overall-ranking" aria-label="総合ランキング">
                     <h2>総合ランキング</h2>
-                    <div class="ranking-panel-note">全プレイヤーのランキングを表示します。</div>
+                    <div class="ranking-period-note">集計期間：月曜0:00〜日曜23:59:59</div>
+                    <div class="ranking-tabs" role="tablist" aria-label="総合ランキング指標">
+                        <button class="ranking-tab active" data-ranking-scope="overall" data-ranking-metric="coins" role="tab" aria-selected="true">コイン</button>
+                        <button class="ranking-tab" data-ranking-scope="overall" data-ranking-metric="exp" role="tab" aria-selected="false">経験値</button>
+                        <button class="ranking-tab" data-ranking-scope="overall" data-ranking-metric="levels" role="tab" aria-selected="false">レベル</button>
+                    </div>
+                    <ol id="overall-ranking-list" class="ranking-list">
+                        <li class="ranking-empty">今週のコインランキングを表示します。</li>
+                    </ol>
                 </section>
             </div>
         </div>
@@ -2600,7 +2655,8 @@
 
         window.onload = () => { updateDisplay(); };
     </script>
-    <script type="module" src="screenNav.js?v=5"></script>
+    <script type="module" src="screenNav.js?v=6"></script>
+    <script src="ranking.js?v=1"></script>
     <script type="module" src="game.js?v=4"></script>
     <script type="module" src="gacha.js?v=2"></script>
     <script type="module" src="equipment.js?v=3"></script>
