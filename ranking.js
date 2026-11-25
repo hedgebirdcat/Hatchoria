@@ -167,21 +167,36 @@ async function loadFriendRanking(metric) {
 
     try {
         const currentUser = auth.currentUser;
-        const currentPlayer = getPlayerData();
-        const friends = await getFriends();
+        const currentPlayer = window.HatchoriaPlayer || getPlayerData();
+        const users = [];
+
+        // 自分は友達申請一覧の取得結果に依存させず、先に必ず追加する。
+        if (currentUser && currentPlayer) {
+            const ownUser = { uid: currentUser.uid, ...currentPlayer };
+            if (ownUser.weeklyPeriodKey !== periodKey) {
+                ownUser.weeklyPeriodKey = periodKey;
+                ownUser.weeklyCoins = 0;
+                ownUser.weeklyExp = 0;
+                ownUser.weeklyLevels = 0;
+            }
+            users.push(ownUser);
+        }
+
+        let friends = [];
+        try {
+            friends = await getFriends();
+        } catch (error) {
+            console.error("フレンド一覧の取得に失敗しました。自分のランキングだけ表示します。", error);
+        }
+
         const uniqueFriends = [...new Map(friends.map((friend) => [friend.uid, friend])).values()];
         const snapshots = await Promise.all(uniqueFriends.map((friend) => getDoc(doc(db, "users", friend.uid))));
         if (serial !== friendRequestSerial) return;
 
-        const users = snapshots
+        users.push(...snapshots
             .filter((snapshot) => snapshot.exists())
             .map((snapshot) => ({ uid: snapshot.id, ...snapshot.data() }))
-            .filter((user) => user.weeklyPeriodKey === periodKey);
-
-        // フレンドランキングは「自分＋承認済みフレンド」で集計する。
-        if (currentUser && currentPlayer && currentPlayer.weeklyPeriodKey === periodKey) {
-            users.push({ uid: currentUser.uid, ...currentPlayer });
-        }
+            .filter((user) => user.weeklyPeriodKey === periodKey));
 
         const uniqueUsers = [...new Map(users.map((user) => [user.uid, user])).values()];
         renderRows("friend", sortRankingUsers(uniqueUsers, metric).slice(0, 20), metric);
