@@ -166,6 +166,8 @@ async function loadFriendRanking(metric) {
     renderMessage("friend", "ランキングを読み込んでいます…");
 
     try {
+        const currentUser = auth.currentUser;
+        const currentPlayer = getPlayerData();
         const friends = await getFriends();
         const uniqueFriends = [...new Map(friends.map((friend) => [friend.uid, friend])).values()];
         const snapshots = await Promise.all(uniqueFriends.map((friend) => getDoc(doc(db, "users", friend.uid))));
@@ -176,7 +178,13 @@ async function loadFriendRanking(metric) {
             .map((snapshot) => ({ uid: snapshot.id, ...snapshot.data() }))
             .filter((user) => user.weeklyPeriodKey === periodKey);
 
-        renderRows("friend", sortRankingUsers(users, metric).slice(0, 20), metric);
+        // フレンドランキングは「自分＋承認済みフレンド」で集計する。
+        if (currentUser && currentPlayer && currentPlayer.weeklyPeriodKey === periodKey) {
+            users.push({ uid: currentUser.uid, ...currentPlayer });
+        }
+
+        const uniqueUsers = [...new Map(users.map((user) => [user.uid, user])).values()];
+        renderRows("friend", sortRankingUsers(uniqueUsers, metric).slice(0, 20), metric);
     } catch (error) {
         console.error("フレンドランキングの取得に失敗しました。", error);
         renderMessage("friend", "フレンドランキングを取得できませんでした。");
