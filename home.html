@@ -2229,7 +2229,7 @@
             <div class="ranking-columns">
                 <section class="ranking-panel friend-ranking" aria-label="フレンドランキング">
                     <h2>フレンドランキング</h2>
-                    <div class="ranking-period-note">集計期間：月曜0:00〜日曜23:59:59</div>
+                    <div id="friend-ranking-period" class="ranking-period-note">集計期間を確認中…</div>
                     <div class="ranking-tabs" role="tablist" aria-label="フレンドランキング指標">
                         <button class="ranking-tab active" data-ranking-scope="friend" data-ranking-metric="coins" role="tab" aria-selected="true">コイン</button>
                         <button class="ranking-tab" data-ranking-scope="friend" data-ranking-metric="exp" role="tab" aria-selected="false">経験値</button>
@@ -2241,7 +2241,7 @@
                 </section>
                 <section class="ranking-panel overall-ranking" aria-label="総合ランキング">
                     <h2>総合ランキング</h2>
-                    <div class="ranking-period-note">集計期間：月曜0:00〜日曜23:59:59</div>
+                    <div id="overall-ranking-period" class="ranking-period-note">集計期間を確認中…</div>
                     <div class="ranking-tabs" role="tablist" aria-label="総合ランキング指標">
                         <button class="ranking-tab active" data-ranking-scope="overall" data-ranking-metric="coins" role="tab" aria-selected="true">コイン</button>
                         <button class="ranking-tab" data-ranking-scope="overall" data-ranking-metric="exp" role="tab" aria-selected="false">経験値</button>
@@ -2656,7 +2656,7 @@
         window.onload = () => { updateDisplay(); };
     </script>
     <script type="module" src="screenNav.js?v=6"></script>
-    <script src="ranking.js?v=1"></script>
+    <script src="ranking.js?v=2"></script>
     <script type="module" src="game.js?v=4"></script>
     <script type="module" src="gacha.js?v=2"></script>
     <script type="module" src="equipment.js?v=3"></script>
