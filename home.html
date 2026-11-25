@@ -884,11 +884,75 @@
             font-size: 12px;
         }
         .ranking-row:last-child { border-bottom: none; }
-        .ranking-rank { color: #ffe082; font-size: 16px; font-weight: 900; text-align: center; }
+        .ranking-rank { color: white; font-size: 16px; font-weight: 400; text-align: center; }
+        .ranking-row.rank-1 .ranking-rank {
+            color: #ffd700;
+            font-weight: 900;
+            text-shadow: 0 0 5px #fff3a1, 0 0 12px #ffd700, 0 0 22px #ff9800;
+        }
+        .ranking-row.rank-2 .ranking-rank {
+            color: #e8e8e8;
+            font-weight: 900;
+            text-shadow: 0 0 5px white, 0 0 12px #bdbdbd, 0 0 20px #78909c;
+        }
+        .ranking-row.rank-3 .ranking-rank {
+            color: #cd7f32;
+            font-weight: 900;
+            text-shadow: 0 0 5px #ffd1a3, 0 0 12px #cd7f32, 0 0 20px #8d4b20;
+        }
         .ranking-name, .ranking-title { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .ranking-name { font-weight: 900; }
+        .ranking-name-button {
+            width: 100%;
+            padding: 0;
+            border: 0;
+            background: transparent;
+            color: white;
+            font: inherit;
+            text-align: left;
+            cursor: pointer;
+        }
+        .ranking-name-button:hover { color: #fff59d; text-decoration: underline; }
         .ranking-title { color: #d7e3ff; font-size: 11px; }
         .ranking-value { color: #fff59d; font-weight: 900; white-space: nowrap; text-align: right; }
+        .ranking-no-record { color: #cfd8dc; font-size: 12px; }
+        .ranking-friend-request-modal {
+            position: fixed;
+            inset: 0;
+            z-index: 70000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            background: rgba(0,0,0,.62);
+        }
+        .ranking-friend-request-modal.show { display: flex; }
+        .ranking-friend-request-card {
+            width: min(90vw, 360px);
+            padding: 26px 22px 20px;
+            border: 3px solid #5c6bc0;
+            border-radius: 22px;
+            background: white;
+            box-shadow: 0 10px 35px rgba(0,0,0,.4);
+            text-align: center;
+        }
+        .ranking-friend-request-message { color: #263238; font-size: 18px; font-weight: 900; line-height: 1.6; }
+        .ranking-friend-request-status { min-height: 20px; margin-top: 10px; color: #e53935; font-size: 13px; font-weight: bold; }
+        .ranking-friend-request-status.success { color: #2e7d32; }
+        .ranking-friend-request-actions { display: flex; gap: 10px; margin-top: 18px; }
+        .ranking-friend-request-actions button {
+            flex: 1;
+            padding: 11px 8px;
+            border: 0;
+            border-radius: 999px;
+            color: white;
+            font-size: 15px;
+            font-weight: 900;
+            cursor: pointer;
+        }
+        #ranking-friend-request-yes { background: #5c6bc0; }
+        #ranking-friend-request-close { background: #90a4ae; }
+        .ranking-friend-request-actions button:disabled { cursor: wait; opacity: .55; }
         .ranking-panel.friend-ranking h2 { color: #00838f; }
         .ranking-panel.overall-ranking h2 { color: #f57c00; }
         .ranking-panel-note {
@@ -2678,7 +2742,7 @@
         window.onload = () => { updateDisplay(); };
     </script>
     <script type="module" src="screenNav.js?v=6"></script>
-    <script type="module" src="ranking.js?v=3"></script>
+    <script type="module" src="ranking.js?v=4"></script>
     <script type="module" src="game.js?v=5"></script>
     <script type="module" src="gacha.js?v=2"></script>
     <script type="module" src="equipment.js?v=3"></script>
