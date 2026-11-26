@@ -212,6 +212,23 @@ function updateRankingPanel(scope, metric) {
     else loadFriendRanking(metric);
 }
 
+function closeFriendRankingHelp() {
+    document.getElementById("friend-ranking-help-modal")?.classList.remove("show");
+}
+
+function setupFriendRankingHelp() {
+    const modal = document.getElementById("friend-ranking-help-modal");
+    const openButton = document.getElementById("friend-ranking-help-btn");
+    const closeButton = document.getElementById("friend-ranking-help-close-btn");
+    if (!modal || !openButton || !closeButton) return;
+
+    openButton.addEventListener("click", () => modal.classList.add("show"));
+    closeButton.addEventListener("click", closeFriendRankingHelp);
+    modal.addEventListener("click", (event) => {
+        if (event.target === modal) closeFriendRankingHelp();
+    });
+}
+
 function ensureFriendRequestModal() {
     let modal = document.getElementById("ranking-friend-request-modal");
     if (modal) return modal;
@@ -292,6 +309,7 @@ async function submitFriendRequest() {
 
 window.addEventListener("DOMContentLoaded", () => {
     updateWeeklyPeriod();
+    setupFriendRankingHelp();
     document.querySelectorAll(".ranking-tab").forEach((button) => {
         button.addEventListener("click", () => updateRankingPanel(button.dataset.rankingScope, button.dataset.rankingMetric));
     });
