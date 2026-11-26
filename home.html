@@ -828,6 +828,30 @@
             font-size: clamp(20px, 4vw, 28px);
             font-weight: 900;
         }
+        .ranking-heading-row {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .ranking-help-btn {
+            position: absolute;
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 26px;
+            height: 26px;
+            padding: 0;
+            border: 2px solid currentColor;
+            border-radius: 50%;
+            background: rgba(255,255,255,.85);
+            color: #00838f;
+            font-size: 16px;
+            font-weight: 900;
+            line-height: 20px;
+            cursor: pointer;
+        }
+        .ranking-help-btn:hover { background: white; transform: translateY(-50%) scale(1.08); }
         .ranking-period-note {
             margin-top: 6px;
             color: #90a4ae;
@@ -953,6 +977,16 @@
         #ranking-friend-request-yes { background: #5c6bc0; }
         #ranking-friend-request-close { background: #90a4ae; }
         .ranking-friend-request-actions button:disabled { cursor: wait; opacity: .55; }
+        .ranking-help-card { max-height: 82vh; overflow-y: auto; }
+        .ranking-help-text {
+            margin-top: 14px;
+            color: #455a64;
+            font-size: 13px;
+            line-height: 1.75;
+            text-align: left;
+        }
+        .ranking-help-text p { margin: 0 0 10px; }
+        .ranking-help-text ul { margin: 0 0 10px; padding-left: 24px; }
         .ranking-panel.friend-ranking h2 { color: #00838f; }
         .ranking-panel.overall-ranking h2 { color: #f57c00; }
         .ranking-panel-note {
@@ -2314,7 +2348,10 @@
             <h1 class="ranking-page-title">ランキング</h1>
             <div class="ranking-columns">
                 <section class="ranking-panel friend-ranking" aria-label="フレンドランキング">
-                    <h2>フレンドランキング</h2>
+                    <div class="ranking-heading-row">
+                        <h2>フレンドランキング</h2>
+                        <button id="friend-ranking-help-btn" class="ranking-help-btn" type="button" aria-label="フレンドランキングの説明">?</button>
+                    </div>
                     <div id="friend-ranking-period" class="ranking-period-note">集計期間を確認中…</div>
                     <div class="ranking-tabs" role="tablist" aria-label="フレンドランキング指標">
                         <button class="ranking-tab active" data-ranking-scope="friend" data-ranking-metric="coins" role="tab" aria-selected="true">コイン</button>
@@ -2338,6 +2375,26 @@
                     </ol>
                 </section>
             </div>
+        </div>
+    </div>
+
+    <div id="friend-ranking-help-modal" class="ranking-friend-request-modal" role="dialog" aria-modal="true" aria-labelledby="friend-ranking-help-title">
+        <div class="ranking-friend-request-card ranking-help-card">
+            <div id="friend-ranking-help-title" class="ranking-friend-request-message">フレンドランキングについて</div>
+            <div class="ranking-help-text">
+                <p>あなたと承認済みのフレンドを対象にした週間ランキングです。</p>
+                <p>コイン・経験値・レベルのタブを切り替えると、それぞれの今週の獲得数で順位が表示されます。</p>
+                <p>集計期間は日本時間の月曜日0時00分から日曜日23時59分59秒までです。</p>
+                <p>期間が更新されると、前週のフレンドランキング順位に応じてコインが配布されます。</p>
+                <ul>
+                    <li>1位：1000コイン</li>
+                    <li>2位：800コイン</li>
+                    <li>3位：500コイン</li>
+                    <li>4位以下：100コイン</li>
+                </ul>
+                <p>報酬はホーム画面右上の手紙ボタンから、1件ずつ受け取れます。</p>
+            </div>
+            <button id="friend-ranking-help-close-btn" class="secondary-btn" type="button">閉じる</button>
         </div>
     </div>
 
@@ -2742,7 +2799,7 @@
         window.onload = () => { updateDisplay(); };
     </script>
     <script type="module" src="screenNav.js?v=6"></script>
-    <script type="module" src="ranking.js?v=5"></script>
+    <script type="module" src="ranking.js?v=6"></script>
     <script type="module" src="game.js?v=5"></script>
     <script type="module" src="gacha.js?v=2"></script>
     <script type="module" src="equipment.js?v=3"></script>
