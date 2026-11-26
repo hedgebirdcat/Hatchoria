@@ -82,6 +82,12 @@ function prepareWeeklyStats() {
     const periodKey = getWeeklyPeriodKey();
 
     if (player.weeklyPeriodKey !== periodKey) {
+        if (player.weeklyPeriodKey) {
+            player.previousWeeklyPeriodKey = player.weeklyPeriodKey;
+            player.previousWeeklyCoins = Number(player.weeklyCoins) || 0;
+            player.previousWeeklyExp = Number(player.weeklyExp) || 0;
+            player.previousWeeklyLevels = Number(player.weeklyLevels) || 0;
+        }
         player.weeklyPeriodKey = periodKey;
         player.weeklyCoins = 0;
         player.weeklyExp = 0;
@@ -300,6 +306,8 @@ window.addEventListener("DOMContentLoaded", () => {
             // 常に同じ数字になる(同じオブジェクトを見ているだけなので)。
             window.HatchoriaPlayer = player;
             window.HatchoriaSave = { save: saveGame, claimLoginBonus };
+            // 週切替時に保存した前週記録をFirestoreへ反映する。
+            await saveGame();
             window.dispatchEvent(new Event("hatchoria:playerReady"));
 
             hideLoadingOverlay();
