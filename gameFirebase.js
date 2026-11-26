@@ -212,7 +212,11 @@ export async function saveAll({
     weeklyPeriodKey,
     weeklyCoins,
     weeklyExp,
-    weeklyLevels
+    weeklyLevels,
+    previousWeeklyPeriodKey,
+    previousWeeklyCoins,
+    previousWeeklyExp,
+    previousWeeklyLevels
 
 }) {
 
@@ -245,6 +249,10 @@ export async function saveAll({
     if (weeklyCoins !== undefined) data.weeklyCoins = weeklyCoins;
     if (weeklyExp !== undefined) data.weeklyExp = weeklyExp;
     if (weeklyLevels !== undefined) data.weeklyLevels = weeklyLevels;
+    if (previousWeeklyPeriodKey !== undefined) data.previousWeeklyPeriodKey = previousWeeklyPeriodKey;
+    if (previousWeeklyCoins !== undefined) data.previousWeeklyCoins = previousWeeklyCoins;
+    if (previousWeeklyExp !== undefined) data.previousWeeklyExp = previousWeeklyExp;
+    if (previousWeeklyLevels !== undefined) data.previousWeeklyLevels = previousWeeklyLevels;
 
     await savePlayerData(data);
 
