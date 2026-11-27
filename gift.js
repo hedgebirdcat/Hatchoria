@@ -78,6 +78,19 @@ async function getFriendRankingUsers(periodKey) {
         });
 }
 
+async function getOverallRankingUsers(periodKey) {
+    const snapshot = await getDocs(collection(db, "users"));
+
+    return snapshot.docs
+        .map((item) => ({ uid: item.id, ...item.data() }))
+        .map((item) => ({ ...item, weeklyCoinsForReward: getPreviousWeeklyCoins(item, periodKey) }))
+        .filter((item) => item.weeklyCoinsForReward !== null)
+        .sort((a, b) => {
+            const difference = b.weeklyCoinsForReward - a.weeklyCoinsForReward;
+            return difference || String(a.accountName || "").localeCompare(String(b.accountName || ""), "ja");
+        });
+}
+
 function getRewardCoins(rank) {
     if (rank === 1) return 1000;
     if (rank === 2) return 800;
@@ -119,6 +132,44 @@ async function createWeeklyFriendReward() {
         transaction.update(userRef, {
             pendingGifts: gifts,
             weeklyFriendRewardPeriod: periodKey
+        });
+    });
+}
+
+async function createWeeklyOverallReward() {
+    const user = auth.currentUser;
+    if (!user) return;
+
+    const periodKey = getPreviousWeeklyPeriodKey();
+    const users = await getOverallRankingUsers(periodKey);
+    const rank = users.findIndex((item) => item.uid === user.uid) + 1;
+    if (rank <= 0) return;
+
+    const rewardCoins = rank === 1 ? 5000 : rank === 2 ? 4000 : rank === 3 ? 3000 : 1000;
+    const userRef = doc(db, "users", user.uid);
+
+    await runTransaction(db, async (transaction) => {
+        const snapshot = await transaction.get(userRef);
+        if (!snapshot.exists()) return;
+        const data = snapshot.data();
+        if (data.overallRankingRewardPeriod === periodKey) return;
+
+        const gifts = Array.isArray(data.pendingGifts) ? data.pendingGifts : [];
+        const giftId = `overall-ranking-${periodKey}`;
+        if (!gifts.some((gift) => gift.id === giftId)) {
+            gifts.push({
+                id: giftId,
+                type: "coins",
+                amount: rewardCoins,
+                title: "週間総合ランキング報酬",
+                message: `前週の総合ランキング${rank}位の報酬です。`,
+                createdAt: Date.now()
+            });
+        }
+
+        transaction.update(userRef, {
+            pendingGifts: gifts,
+            overallRankingRewardPeriod: periodKey
         });
     });
 }
@@ -210,9 +261,14 @@ window.addEventListener("DOMContentLoaded", () => {
     window.addEventListener("hatchoria:playerReady", async () => {
         try {
             await createWeeklyFriendReward();
-            await loadGifts();
         } catch (error) {
             console.error("週間フレンドランキング報酬の準備に失敗しました。", error);
         }
+        try {
+            await createWeeklyOverallReward();
+        } catch (error) {
+            console.error("週間総合ランキング報酬の準備に失敗しました。", error);
+        }
+        await loadGifts();
     });
 });
