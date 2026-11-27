@@ -216,17 +216,22 @@ function closeFriendRankingHelp() {
     document.getElementById("friend-ranking-help-modal")?.classList.remove("show");
 }
 
-function setupFriendRankingHelp() {
-    const modal = document.getElementById("friend-ranking-help-modal");
-    const openButton = document.getElementById("friend-ranking-help-btn");
-    const closeButton = document.getElementById("friend-ranking-help-close-btn");
+function setupRankingHelp(modalId, openButtonId, closeButtonId) {
+    const modal = document.getElementById(modalId);
+    const openButton = document.getElementById(openButtonId);
+    const closeButton = document.getElementById(closeButtonId);
     if (!modal || !openButton || !closeButton) return;
 
     openButton.addEventListener("click", () => modal.classList.add("show"));
-    closeButton.addEventListener("click", closeFriendRankingHelp);
+    closeButton.addEventListener("click", () => modal.classList.remove("show"));
     modal.addEventListener("click", (event) => {
-        if (event.target === modal) closeFriendRankingHelp();
+        if (event.target === modal) modal.classList.remove("show");
     });
+}
+
+function setupFriendRankingHelp() {
+    setupRankingHelp("friend-ranking-help-modal", "friend-ranking-help-btn", "friend-ranking-help-close-btn");
+    setupRankingHelp("overall-ranking-help-modal", "overall-ranking-help-btn", "overall-ranking-help-close-btn");
 }
 
 function ensureFriendRequestModal() {
