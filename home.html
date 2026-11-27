@@ -2363,7 +2363,10 @@
                     </ol>
                 </section>
                 <section class="ranking-panel overall-ranking" aria-label="総合ランキング">
-                    <h2>総合ランキング</h2>
+                    <div class="ranking-heading-row">
+                        <h2>総合ランキング</h2>
+                        <button id="overall-ranking-help-btn" class="ranking-help-btn" type="button" aria-label="総合ランキングの説明" style="color:#f57c00;">?</button>
+                    </div>
                     <div id="overall-ranking-period" class="ranking-period-note">集計期間を確認中…</div>
                     <div class="ranking-tabs" role="tablist" aria-label="総合ランキング指標">
                         <button class="ranking-tab active" data-ranking-scope="overall" data-ranking-metric="coins" role="tab" aria-selected="true">コイン</button>
@@ -2395,6 +2398,26 @@
                 <p>報酬はホーム画面右上の手紙ボタンから、1件ずつ受け取れます。</p>
             </div>
             <button id="friend-ranking-help-close-btn" class="secondary-btn" type="button">閉じる</button>
+        </div>
+    </div>
+
+    <div id="overall-ranking-help-modal" class="ranking-friend-request-modal" role="dialog" aria-modal="true" aria-labelledby="overall-ranking-help-title">
+        <div class="ranking-friend-request-card ranking-help-card">
+            <div id="overall-ranking-help-title" class="ranking-friend-request-message">総合ランキングについて</div>
+            <div class="ranking-help-text">
+                <p>ゲームをプレイしている全ユーザーを対象にした週間ランキングです。</p>
+                <p>コイン・経験値・レベルのタブを切り替えると、それぞれの今週の獲得数で順位が表示されます。</p>
+                <p>集計期間は日本時間の月曜日0時00分から日曜日23時59分59秒までです。</p>
+                <p>期間が更新されると、前週の総合ランキング順位に応じてコインが配布されます。</p>
+                <ul>
+                    <li>1位：5000コイン</li>
+                    <li>2位：4000コイン</li>
+                    <li>3位：3000コイン</li>
+                    <li>4位以下：1000コイン</li>
+                </ul>
+                <p>報酬はホーム画面右上の手紙ボタンから、1件ずつ受け取れます。</p>
+            </div>
+            <button id="overall-ranking-help-close-btn" class="secondary-btn" type="button">閉じる</button>
         </div>
     </div>
 
@@ -2799,13 +2822,13 @@
         window.onload = () => { updateDisplay(); };
     </script>
     <script type="module" src="screenNav.js?v=6"></script>
-    <script type="module" src="ranking.js?v=6"></script>
+    <script type="module" src="ranking.js?v=7"></script>
     <script type="module" src="game.js?v=5"></script>
     <script type="module" src="gacha.js?v=2"></script>
     <script type="module" src="equipment.js?v=3"></script>
     <script type="module" src="storage.js?v=2"></script>
     <script type="module" src="profile.js?v=4"></script>
-    <script type="module" src="gift.js?v=2"></script>
+    <script type="module" src="gift.js?v=3"></script>
     <script type="module" src="friends.js?v=2"></script>
     <script type="module" src="match.js?v=2"></script>
 </body>
