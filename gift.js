@@ -193,8 +193,10 @@ function renderGifts() {
 
     list.innerHTML = currentGifts.map((gift) => `<div class="gift-card" data-gift-id="${escapeHtml(gift.id)}">
         <div class="gift-card-title">${escapeHtml(gift.title || "ギフト")}</div>
-        <div class="gift-card-message">${escapeHtml(gift.message || "ギフトが届いています。")}</div>
-        <div class="gift-card-reward">🪙 ${Number(gift.amount) || 0}コイン</div>
+        <div class="gift-card-reward-row">
+            <div class="gift-card-reward">🪙 ${Number(gift.amount) || 0}コイン</div>
+            <div class="gift-card-ranking-note">${escapeHtml(gift.message || "ギフトが届いています。")}</div>
+        </div>
         <button class="primary-btn gift-receive-btn" type="button">受け取る</button>
     </div>`).join("");
 
